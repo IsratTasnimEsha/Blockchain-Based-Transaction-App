@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/few_blue"
+    tools:context=".AddTransactionFragment">
+
+    <androidx.cardview.widget.CardView
+        android:layout_width="170dp"
+        android:layout_height="170dp"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:cardBackgroundColor="@color/dark_blue" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:layout_margin="40dp"
+        android:orientation="vertical"
+        android:padding="5dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        tools:layout_editor_absoluteX="40dp">
+
+        <androidx.cardview.widget.CardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="10dp"
+            android:layout_marginTop="120dp"
+            app:cardCornerRadius="8dp">
+            <EditText
+                android:id="@+id/receiver"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@color/transparent"
+                android:drawableLeft="@drawable/baseline_phone_android_24"
+                android:drawablePadding="5dp"
+                android:padding="5dp"
+                android:ems="10"
+                android:hint="Receiver's Phone Number"
+                android:inputType="phone"
+                android:minHeight="48dp" />
+        </androidx.cardview.widget.CardView>
+
+        <androidx.cardview.widget.CardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="10dp"
+            app:cardCornerRadius="8dp">
+            <EditText
+                android:id="@+id/amount"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@color/transparent"
+                android:drawableLeft="@drawable/baseline_attach_money_24"
+                android:drawablePadding="5dp"
+                android:padding="5dp"
+                android:ems="10"
+                android:hint="Amount"
+                android:inputType="number"
+                android:minHeight="48dp" />
+        </androidx.cardview.widget.CardView>
+
+        <androidx.cardview.widget.CardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="10dp"
+            app:cardCornerRadius="8dp">
+            <EditText
+                android:id="@+id/fees"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@color/transparent"
+                android:drawableLeft="@drawable/baseline_attach_money_24"
+                android:drawablePadding="5dp"
+                android:padding="5dp"
+                android:ems="10"
+                android:hint="Fees"
+                android:inputType="number"
+                android:minHeight="48dp" />
+        </androidx.cardview.widget.CardView>
+
+
+        <androidx.cardview.widget.CardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:cardCornerRadius="8dp">
+            <Button
+                android:id="@+id/transact"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@color/dark_blue"
+                android:text="Transact"
+                android:textColor="@color/white" />
+        </androidx.cardview.widget.CardView>
+
+    </LinearLayout>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

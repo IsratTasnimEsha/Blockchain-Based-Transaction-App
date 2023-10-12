@@ -3,6 +3,7 @@ package com.example.wisechoice
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import android.content.Context
+import android.content.Intent
 import android.content.SharedPreferences
 import android.os.Build
 import android.os.Bundle
@@ -14,8 +15,11 @@ import android.widget.EditText
 import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.fragment.app.Fragment
+import com.google.firebase.database.DataSnapshot
+import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.FirebaseDatabase
+import com.google.firebase.database.ValueEventListener
 
 class AddTransactionFragment : Fragment() {
     private lateinit var receiver: EditText
@@ -62,28 +66,59 @@ class AddTransactionFragment : Fragment() {
                 val formattedDateTime = currentDateTime.format(formatter)
 
                 if (st_receiver.isEmpty()) {
-                        receiver.error = "Please Enter The Phone Number."
-                }
-                else if (st_amount.isEmpty()) {
+                    receiver.error = "Please Enter The Phone Number."
+                } else if (st_amount.isEmpty()) {
                     amount.error = "Please Enter The Amount."
-                }
-                else if (st_fees.isEmpty()) {
+                } else if (st_fees.isEmpty()) {
                     fees.error = "Please Enter The Phone Number."
-                }
-                else {
-                    databaseReference.child("transactions").child(st_phone).child("Amount").setValue(st_amount)
-                    databaseReference.child("transactions").child(st_phone).child("Block_No").setValue(unrecognized)
-                    databaseReference.child("transactions").child(st_phone).child("Fees").setValue(st_fees)
-                    databaseReference.child("transactions").child(st_phone).child("Receiver").setValue(st_receiver)
-                    databaseReference.child("transactions").child(st_phone).child("Sender").setValue(st_phone)
-                    databaseReference.child("transactions").child(st_phone).child("Temp_Block").setValue(unrecognized)
-                    databaseReference.child("transactions").child(st_phone).child("Transaction_Time").setValue(formattedDateTime.toString())
-                    databaseReference.child("transactions").child(st_phone).child("Verify").setValue(unrecognized)
+                } else {
+                    val minersRef = databaseReference.child("miners")
 
-                    Toast.makeText(requireContext(), "The Transaction Has Occurred.", Toast.LENGTH_SHORT).show()
-                    receiver.text.clear()
-                    amount.text.clear()
-                    fees.text.clear()
+                    val transactionKey = databaseReference.child("transactions").push().key
+
+                    minersRef.addListenerForSingleValueEvent(object : ValueEventListener {
+                        override fun onDataChange(snapshot: DataSnapshot) {
+                            for (childSnapshot in snapshot.children) {
+                                val phone = childSnapshot.key
+
+                                if (phone != null) {
+                                    val phoneRef = minersRef.child(phone)
+
+                                    if (transactionKey != null) {
+                                        val newTransactionRef =
+                                            phoneRef.child("transactions").child(transactionKey)
+                                        val refString = newTransactionRef.key
+
+                                        newTransactionRef.child("Amount").setValue(st_amount)
+                                        newTransactionRef.child("Block_No").setValue(unrecognized)
+                                        newTransactionRef.child("Fees").setValue(st_fees)
+                                        newTransactionRef.child("Receiver").setValue(st_receiver)
+                                        newTransactionRef.child("Sender").setValue(st_phone)
+                                        newTransactionRef.child("Temp_Block").setValue(unrecognized)
+                                        newTransactionRef.child("Transaction_ID")
+                                            .setValue(refString.toString())
+                                        newTransactionRef.child("Transaction_Time")
+                                            .setValue(formattedDateTime.toString())
+                                        newTransactionRef.child("Verify").setValue(unrecognized)
+                                    }
+                                }
+                            }
+
+                            Toast.makeText(
+                                requireContext(),
+                                "The Transaction Has Occurred.",
+                                Toast.LENGTH_SHORT
+                            ).show()
+
+                            receiver.text.clear()
+                            amount.text.clear()
+                            fees.text.clear()
+                        }
+
+                        override fun onCancelled(error: DatabaseError) {
+                            // Handle database error if needed
+                        }
+                    })
                 }
             }
         })

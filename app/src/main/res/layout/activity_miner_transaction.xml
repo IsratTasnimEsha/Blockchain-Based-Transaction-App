@@ -26,7 +26,7 @@
             android:id="@+id/miner_bottom"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:background="#E9E8E6"
+            android:background="@color/dark_blue"
             app:menu="@menu/miner_menu" />
 
     </LinearLayout>

@@ -94,7 +94,6 @@ class AddTransactionFragment : Fragment() {
                                         newTransactionRef.child("Fees").setValue(st_fees)
                                         newTransactionRef.child("Receiver").setValue(st_receiver)
                                         newTransactionRef.child("Sender").setValue(st_phone)
-                                        newTransactionRef.child("Temp_Block").setValue(unrecognized)
                                         newTransactionRef.child("Transaction_ID")
                                             .setValue(refString.toString())
                                         newTransactionRef.child("Transaction_Time")

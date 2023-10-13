@@ -9,6 +9,7 @@ import android.view.ViewGroup
 import android.widget.Button
 import android.widget.TextView
 import androidx.cardview.widget.CardView
+import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -26,6 +27,7 @@ class TempBlockAdapter(
     private val feeses: List<String>,
     private val verifies: List<String>,
     private val ids: List<String>,
+    private val transaction_times: List<String>,
 
     private var databaseReference: DatabaseReference = FirebaseDatabase.getInstance().getReference()
 
@@ -43,32 +45,75 @@ class TempBlockAdapter(
         holder.amount.text = "${amounts[position]}"
         holder.fees.text = "${feeses[position]}"
         holder.verify.text = "${verifies[position]}"
+        val idValue = ids[position]
 
-        if(holder.verify.text == "Verified") {
+        if(verifies[position] == "Unrecognized") {
+            holder.verify_button.isEnabled = true
+            holder.verify_button.text = "Verify"
+            holder.transaction_card.setBackgroundColor(ContextCompat.getColor(context, R.color.white))
+        }
+
+        else if(verifies[position] == "Verified") {
+            holder.verify_button.isEnabled = true
             holder.verify_button.text = "Add To Block"
+            holder.transaction_card.setBackgroundColor(ContextCompat.getColor(context, R.color.green))
+        }
+
+        else if(verifies[position] == "Not Verified") {
+            holder.verify_button.isEnabled = false
+            holder.verify_button.text = "Denied"
+            holder.transaction_card.setBackgroundColor(ContextCompat.getColor(context, R.color.dark_green ))
+        }
+
+        else if(verifies[position] == "Temporary Blocked") {
+            holder.verify_button.isEnabled = false
+            holder.verify_button.text = "Wait"
+            holder.transaction_card.setBackgroundColor(ContextCompat.getColor(context, R.color.yellow))
         }
 
         holder.verify_button.setOnClickListener {
-            val idValue = ids[position]
-
             val sharedPreferences =
                 context.getSharedPreferences("MySharedPref", Context.MODE_PRIVATE)
             val st_phone = sharedPreferences.getString("Phone", "") ?: ""
 
-            val newTransactionRef = databaseReference.child("miners").child(st_phone)
-                .child("transactions").child(idValue)
-            newTransactionRef.child("Verify").setValue("Verified")
+            if(holder.verify.text == "Unrecognized") {
+                val newTransactionRef = databaseReference.child("miners").child(st_phone)
+                    .child("transactions").child(idValue)
+                newTransactionRef.child("Verify").setValue("Verified")
 
-            holder.verify.text = "Verified"
-            holder.verify_button.text = "Add To Block"
+                holder.verify.text = "Verified"
+                holder.verify_button.text = "Add To Block"
+                holder.verify_button.isEnabled = true
+                holder.transaction_card.setBackgroundColor(ContextCompat.getColor(context, R.color.green))
+            }
 
+            else if(holder.verify.text == "Verified") {
+                val newTransactionRef = databaseReference.child("miners").child(st_phone)
+                    .child("transactions").child(idValue)
+                newTransactionRef.child("Verify").setValue("Temporary Blocked")
+
+                holder.verify.text = ""
+                holder.verify_button.text = "Temporary Blocked"
+                holder.verify_button.isEnabled = false
+                holder.transaction_card.setBackgroundColor(ContextCompat.getColor(context, R.color.yellow))
+
+                val tempTransactionRef = databaseReference.child("miners").child(st_phone)
+                    .child("temporary_blocks").child(idValue)
+
+                tempTransactionRef.child("Amount").setValue("${amounts[position]}")
+                tempTransactionRef.child("Fees").setValue("${feeses[position]}")
+                tempTransactionRef.child("Receiver").setValue("${receivers[position]}")
+                tempTransactionRef.child("Sender").setValue("${senders[position]}")
+                tempTransactionRef.child("Transaction_ID").setValue("${ids[position]}")
+                tempTransactionRef.child("Transaction_Time").setValue("${transaction_times[position]}")
+            }
         }
 
         holder.transaction_card.setOnClickListener {
-            val idValue = ids[position]
 
             val intent = Intent(context, TransactionDetailsActivity::class.java)
-            intent.putExtra("transaction_id", idValue.toString())
+
+            intent.putExtra("transaction_id", idValue)
             context.startActivity(intent)
         }
     }
@@ -100,6 +145,7 @@ class AddToBlockFragment : Fragment() {
     private val feeses = mutableListOf<String>()
     private val verifies = mutableListOf<String>()
     private val ids = mutableListOf<String>()
+    private val transaction_times = mutableListOf<String>()
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
@@ -127,7 +173,8 @@ class AddToBlockFragment : Fragment() {
             amounts,
             feeses,
             verifies,
-            ids
+            ids,
+            transaction_times
         )
         recyclerView.adapter = adapterClass
 
@@ -138,6 +185,8 @@ class AddToBlockFragment : Fragment() {
                 amounts.clear()
                 feeses.clear()
                 verifies.clear()
+                ids.clear()
+                transaction_times.clear()
 
                 for (dataSnapshot in snapshot.children) {
                     val sender = dataSnapshot.child("Sender").value.toString()
@@ -145,6 +194,7 @@ class AddToBlockFragment : Fragment() {
                     val amount = dataSnapshot.child("Amount").value.toString()
                     val fees = dataSnapshot.child("Fees").value.toString()
                     val verify = dataSnapshot.child("Verify").value.toString()
+                    val transaction_time = dataSnapshot.child("Transaction_Time").value.toString()
                     val id = dataSnapshot.child("Transaction_ID").value.toString()
 
                     senders.add(sender)
@@ -153,6 +203,7 @@ class AddToBlockFragment : Fragment() {
                     feeses.add(fees)
                     verifies.add(verify)
                     ids.add(id)
+                    transaction_times.add(transaction_time)
                 }
                 adapterClass.notifyDataSetChanged()
             }

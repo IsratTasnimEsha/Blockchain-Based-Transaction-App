@@ -1,7 +1,9 @@
 package com.example.wisechoice
 
+import android.content.Context
+import android.content.Intent
+import android.content.SharedPreferences
 import android.os.Bundle
-import android.util.Log
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import com.google.firebase.database.DataSnapshot
@@ -39,13 +41,17 @@ class TransactionDetailsActivity : AppCompatActivity() {
 
         st_id = intent.getStringExtra("transaction_id") ?: ""
 
-        databaseReference = FirebaseDatabase.getInstance().getReference("transactions").child(st_id)
+        val sharedPreferences = getSharedPreferences("MySharedPref", Context.MODE_PRIVATE)
+        val st_phone = sharedPreferences.getString("Phone", "") ?: ""
 
         // Fetch and set data from Firebase
-        fetchTransactionDetails()
+        fetchTransactionDetails(st_phone)
     }
 
-    private fun fetchTransactionDetails() {
+    private fun fetchTransactionDetails(st_phone: String) {
+        databaseReference = FirebaseDatabase.getInstance().getReference("miners").child(st_phone)
+            .child("transactions").child(st_id)
+
         databaseReference.addListenerForSingleValueEvent(object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
                 if (snapshot.exists()) {

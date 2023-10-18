@@ -4,8 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/few_blue"
-    tools:context=".AddToBlockFragment">
+    tools:context=".BlockQueueActivity">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -24,7 +23,7 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="Sender"
+                android:text="Block Hash"
                 android:textStyle="bold"
                 android:paddingTop="10dp"
                 android:paddingBottom="10dp"
@@ -35,7 +34,7 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="Receiver"
+                android:text="Miner"
                 android:textStyle="bold"
                 android:gravity="center"/>
 
@@ -44,7 +43,7 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="Amount"
+                android:text="No. of Transactions"
                 android:textStyle="bold"
                 android:gravity="center"/>
 
@@ -53,16 +52,16 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="Fees"
+                android:text="Total Sent"
                 android:textStyle="bold"
                 android:gravity="center"/>
 
             <TextView
-                android:id="@+id/textView8"
+                android:id="@+id/textView11"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="Verify"
+                android:text="Accept"
                 android:textStyle="bold"
                 android:gravity="center"/>
 

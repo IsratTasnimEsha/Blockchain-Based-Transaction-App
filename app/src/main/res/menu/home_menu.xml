@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item
+        android:id="@+id/block_queue"
+        android:icon="@drawable/baseline_enhanced_encryption_24"
+        android:title="Block Queue" />
+
+    <item
+        android:id="@+id/blockchain"
+        android:icon="@drawable/baseline_enhanced_encryption_24"
+        android:title="Blockchain" />
+
+    <item
+        android:id="@+id/account"
+        android:icon="@drawable/baseline_account_circle_24"
+        android:title="Account" />
+
+    <item
+        android:id="@+id/reset_password"
+        android:icon="@drawable/baseline_security_24"
+        android:title="Reset Password" />
+
+    <item
+        android:id="@+id/logout"
+        android:icon="@drawable/baseline_logout_24"
+        android:title="Log Out" />
+</menu>

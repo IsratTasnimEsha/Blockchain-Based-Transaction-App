@@ -88,6 +88,7 @@ class MinerTransactionActivity : AppCompatActivity(), NavigationView.OnNavigatio
     override fun onNavigationItemSelected(item: MenuItem): Boolean {
         when (item.itemId) {
             R.id.block_queue -> {
+
                 val intent2 = Intent(this, BlockQueueActivity::class.java)
                 startActivity(intent2)
             }

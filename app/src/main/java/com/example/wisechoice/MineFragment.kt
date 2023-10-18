@@ -10,7 +10,6 @@ import android.view.ViewGroup
 import android.widget.Button
 import android.widget.TextView
 import androidx.cardview.widget.CardView
-import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.firebase.database.DataSnapshot
@@ -27,9 +26,6 @@ class MineBlockAdapter(
     private val feeses: List<String>,
     private val ids: List<String>,
     private val transaction_times: List<String>,
-
-    private var databaseReference: DatabaseReference = FirebaseDatabase.getInstance().getReference()
-
 ) : RecyclerView.Adapter<MineBlockAdapter.MyViewHolder>() {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): MyViewHolder {
@@ -38,7 +34,6 @@ class MineBlockAdapter(
     }
 
     override fun onBindViewHolder(holder: MyViewHolder, position: Int) {
-
         holder.sender.text = "${senders[position]}"
         holder.receiver.text = "${receivers[position]}"
         holder.amount.text = "${amounts[position]}"
@@ -50,21 +45,19 @@ class MineBlockAdapter(
                 context.getSharedPreferences("MySharedPref", Context.MODE_PRIVATE)
             val st_phone = sharedPreferences.getString("Phone", "") ?: ""
 
-            val newTransactionRef = databaseReference.child("miners").child(st_phone)
-                .child("transactions").child(idValue)
-
+            // Update the "Verify" field of the corresponding transaction to "Verified"
+            val newTransactionRef = FirebaseDatabase.getInstance().getReference("miners")
+                .child(st_phone).child("transactions").child(idValue)
             newTransactionRef.child("Verify").setValue("Verified")
 
-            val tempTransactionRef = databaseReference.child("miners").child(st_phone)
-                .child("temporary_blocks").child(idValue)
-
+            // Remove the corresponding item from temporary_blocks
+            val tempTransactionRef = FirebaseDatabase.getInstance().getReference("miners")
+                .child(st_phone).child("temporary_blocks").child(idValue)
             tempTransactionRef.removeValue()
         }
 
         holder.transaction_card.setOnClickListener {
-
             val intent = Intent(context, TransactionDetailsActivity::class.java)
-
             intent.putExtra("transaction_id", idValue)
             context.startActivity(intent)
         }
@@ -87,8 +80,7 @@ class MineBlockAdapter(
 class MineFragment : Fragment() {
     private lateinit var recyclerView: RecyclerView
     private lateinit var adapterClass: MineBlockAdapter
-
-    private lateinit var databaseReference: DatabaseReference
+    private lateinit var mineButton: Button
 
     private val senders = mutableListOf<String>()
     private val receivers = mutableListOf<String>()
@@ -96,6 +88,7 @@ class MineFragment : Fragment() {
     private val feeses = mutableListOf<String>()
     private val ids = mutableListOf<String>()
     private val transaction_times = mutableListOf<String>()
+
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
@@ -106,12 +99,11 @@ class MineFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        var sharedPreferences =
-            requireContext().getSharedPreferences("MySharedPref", Context.MODE_PRIVATE)
-        var st_phone = sharedPreferences.getString("Phone", "") ?: ""
+        val sharedPreferences = requireContext().getSharedPreferences("MySharedPref", Context.MODE_PRIVATE)
+        val st_phone = sharedPreferences.getString("Phone", "") ?: ""
 
-        databaseReference = FirebaseDatabase.getInstance().getReference("miners").child(st_phone)
-            .child("temporary_blocks")
+        val tempBlocksReference = FirebaseDatabase.getInstance().getReference("miners")
+            .child(st_phone).child("temporary_blocks")
 
         recyclerView = view.findViewById(R.id.recycler)
         recyclerView.setHasFixedSize(true)
@@ -127,7 +119,19 @@ class MineFragment : Fragment() {
         )
         recyclerView.adapter = adapterClass
 
-        databaseReference.addValueEventListener(object : ValueEventListener {
+        mineButton = view.findViewById(R.id.mine_button)
+
+        mineButton.setOnClickListener {
+            // Handle the "Mine" button click action here
+            val st_phone = sharedPreferences.getString("Phone", "") ?: ""
+
+            // Iterate through the temporary blocks and update "Verify" of corresponding transactions
+            for (idValue in ids) {
+                mineTransactions(st_phone, idValue)
+            }
+        }
+
+        tempBlocksReference.addValueEventListener(object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
                 senders.clear()
                 receivers.clear()
@@ -157,5 +161,32 @@ class MineFragment : Fragment() {
 
             override fun onCancelled(error: DatabaseError) {}
         })
+    }
+
+    private fun mineTransactions(st_phone: String, idValue: String) {
+        val transactionRef = FirebaseDatabase.getInstance().getReference("miners")
+            .child(st_phone).child("transactions")
+
+        val query = transactionRef.orderByChild("Transaction_ID").equalTo(idValue)
+
+        query.addListenerForSingleValueEvent(object : ValueEventListener {
+            override fun onDataChange(transactionSnapshot: DataSnapshot) {
+                for (transactionData in transactionSnapshot.children) {
+                    val transactionId = transactionData.key.toString()
+                    val transactionVerifyRef = transactionRef.child(transactionId)
+                        .child("Verify")
+                    transactionVerifyRef.setValue("Processing...")
+                }
+            }
+
+            override fun onCancelled(error: DatabaseError) {
+                // Handle the error
+            }
+        })
+
+        // Remove the corresponding item from temporary_blocks
+        val tempTransactionRef = FirebaseDatabase.getInstance().getReference("miners")
+            .child(st_phone).child("temporary_blocks").child(idValue)
+        tempTransactionRef.removeValue()
     }
 }

@@ -71,6 +71,12 @@ class TempBlockAdapter(
             holder.transaction_card.setBackgroundColor(ContextCompat.getColor(context, R.color.yellow))
         }
 
+        else if(verifies[position] == "Processing...") {
+            holder.verify_button.isEnabled = false
+            holder.verify_button.text = "Wait"
+            holder.transaction_card.setBackgroundColor(ContextCompat.getColor(context, R.color.orange))
+        }
+
         holder.verify_button.setOnClickListener {
             val sharedPreferences =
                 context.getSharedPreferences("MySharedPref", Context.MODE_PRIVATE)

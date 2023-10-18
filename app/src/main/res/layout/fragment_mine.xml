@@ -85,7 +85,7 @@
                 android:layout_margin="15dp"
                 app:cardCornerRadius="8dp">
                 <Button
-                    android:id="@+id/remove"
+                    android:id="@+id/cancel_button"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:background="@color/dark_blue"
@@ -100,7 +100,7 @@
                 android:layout_margin="15dp"
                 app:cardCornerRadius="8dp">
                 <Button
-                    android:id="@+id/mine"
+                    android:id="@+id/mine_button"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:background="@color/dark_blue"

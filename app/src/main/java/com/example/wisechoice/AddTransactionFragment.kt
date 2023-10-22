@@ -8,20 +8,27 @@ import android.content.SharedPreferences
 import android.os.Build
 import android.os.Bundle
 import android.view.LayoutInflater
+import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
 import android.widget.EditText
+import android.widget.ImageView
+import android.widget.TextView
 import android.widget.Toast
 import androidx.annotation.RequiresApi
+import androidx.appcompat.app.ActionBarDrawerToggle
+import androidx.core.view.GravityCompat
+import androidx.drawerlayout.widget.DrawerLayout
 import androidx.fragment.app.Fragment
+import com.google.android.material.navigation.NavigationView
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
 
-class AddTransactionFragment : Fragment() {
+class AddTransactionFragment : Fragment(), NavigationView.OnNavigationItemSelectedListener{
     private lateinit var receiver: EditText
     private lateinit var amount: EditText
     private lateinit var fees: EditText
@@ -32,6 +39,15 @@ class AddTransactionFragment : Fragment() {
     private lateinit var sharedPreferences: SharedPreferences
     private lateinit var databaseReference: DatabaseReference
 
+    var drawerLayout: DrawerLayout? = null
+    var navigationView: NavigationView? = null
+    var nView: View? = null
+
+    var username: TextView? = null
+    var phone: TextView? = null
+    var photo: ImageView? = null
+    var home_menu: ImageView? = null
+
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
@@ -41,6 +57,27 @@ class AddTransactionFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+
+        drawerLayout = view.findViewById<DrawerLayout>(R.id.drawer)
+        // Use the activity context to initialize ActionBarDrawerToggle
+        val actionBarDrawerToggle = ActionBarDrawerToggle(
+            requireActivity(), drawerLayout,
+            R.string.navigation_drawer_open, R.string.navigation_drawer_close
+        )
+        actionBarDrawerToggle.syncState()
+
+        navigationView = view.findViewById<NavigationView>(R.id.navigation)
+        nView = navigationView?.getHeaderView(0)
+        username = nView?.findViewById<TextView>(R.id.username)
+        phone = nView?.findViewById<TextView>(R.id.phone)
+        photo = nView?.findViewById<ImageView>(R.id.photo)
+        home_menu = view.findViewById<ImageView>(R.id.home_menu)
+
+        home_menu?.setOnClickListener {
+            drawerLayout?.openDrawer(GravityCompat.START)
+        }
+
+        navigationView?.setNavigationItemSelectedListener(this)
 
         databaseReference = FirebaseDatabase.getInstance().getReference()
 
@@ -121,5 +158,24 @@ class AddTransactionFragment : Fragment() {
                 }
             }
         })
+    }
+
+    override fun onNavigationItemSelected(item: MenuItem): Boolean {
+        when (item.itemId) {
+            R.id.block_queue -> {
+                val intent2 = Intent(requireContext(), BlockQueueActivity::class.java)
+                startActivity(intent2)
+            }
+            R.id.blockchain -> {
+                val intent2 = Intent(requireContext(), BlockchainActivity::class.java)
+                startActivity(intent2)
+            }
+            R.id.logout -> {
+                val intent = Intent(requireContext(), MainActivity::class.java)
+                startActivity(intent)
+                requireActivity().finish() // Finish the current activity
+            }
+        }
+        return true
     }
 }

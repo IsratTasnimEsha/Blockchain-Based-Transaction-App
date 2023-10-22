@@ -2,17 +2,24 @@ package com.example.wisechoice
 
 import android.content.Context
 import android.content.Intent
+import android.content.SharedPreferences
 import android.os.Bundle
 import android.view.LayoutInflater
+import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
+import android.widget.ImageView
 import android.widget.TextView
+import androidx.appcompat.app.ActionBarDrawerToggle
 import androidx.cardview.widget.CardView
 import androidx.core.content.ContextCompat
+import androidx.core.view.GravityCompat
+import androidx.drawerlayout.widget.DrawerLayout
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.google.android.material.navigation.NavigationView
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.DatabaseReference
@@ -106,12 +113,7 @@ class TempBlockAdapter(
                 val tempTransactionRef = databaseReference.child("miners").child(st_phone)
                     .child("temporary_blocks").child(idValue)
 
-                tempTransactionRef.child("Amount").setValue("${amounts[position]}")
-                tempTransactionRef.child("Fees").setValue("${feeses[position]}")
-                tempTransactionRef.child("Receiver").setValue("${receivers[position]}")
-                tempTransactionRef.child("Sender").setValue("${senders[position]}")
                 tempTransactionRef.child("Transaction_ID").setValue("${ids[position]}")
-                tempTransactionRef.child("Transaction_Time").setValue("${transaction_times[position]}")
             }
         }
 
@@ -139,7 +141,7 @@ class TempBlockAdapter(
     }
 }
 
-class AddToBlockFragment : Fragment() {
+class AddToBlockFragment : Fragment(), NavigationView.OnNavigationItemSelectedListener {
     private lateinit var recyclerView: RecyclerView
     private lateinit var adapterClass: TempBlockAdapter
 
@@ -152,6 +154,15 @@ class AddToBlockFragment : Fragment() {
     private val verifies = mutableListOf<String>()
     private val ids = mutableListOf<String>()
     private val transaction_times = mutableListOf<String>()
+
+    var drawerLayout: DrawerLayout? = null
+    var navigationView: NavigationView? = null
+    var nView: View? = null
+
+    var username: TextView? = null
+    var phone: TextView? = null
+    var photo: ImageView? = null
+    var home_menu: ImageView? = null
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
@@ -161,6 +172,27 @@ class AddToBlockFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+
+        drawerLayout = view.findViewById<DrawerLayout>(R.id.drawer)
+        // Use the activity context to initialize ActionBarDrawerToggle
+        val actionBarDrawerToggle = ActionBarDrawerToggle(
+            requireActivity(), drawerLayout,
+            R.string.navigation_drawer_open, R.string.navigation_drawer_close
+        )
+        actionBarDrawerToggle.syncState()
+
+        navigationView = view.findViewById<NavigationView>(R.id.navigation)
+        nView = navigationView?.getHeaderView(0)
+        username = nView?.findViewById<TextView>(R.id.username)
+        phone = nView?.findViewById<TextView>(R.id.phone)
+        photo = nView?.findViewById<ImageView>(R.id.photo)
+        home_menu = view.findViewById<ImageView>(R.id.home_menu)
+
+        home_menu?.setOnClickListener {
+            drawerLayout?.openDrawer(GravityCompat.START)
+        }
+
+        navigationView?.setNavigationItemSelectedListener(this)
 
         var sharedPreferences =
             requireContext().getSharedPreferences("MySharedPref", Context.MODE_PRIVATE)
@@ -216,5 +248,24 @@ class AddToBlockFragment : Fragment() {
 
             override fun onCancelled(error: DatabaseError) {}
         })
+    }
+
+    override fun onNavigationItemSelected(item: MenuItem): Boolean {
+        when (item.itemId) {
+            R.id.block_queue -> {
+                val intent2 = Intent(requireContext(), BlockQueueActivity::class.java)
+                startActivity(intent2)
+            }
+            R.id.blockchain -> {
+                val intent2 = Intent(requireContext(), BlockchainActivity::class.java)
+                startActivity(intent2)
+            }
+            R.id.logout -> {
+                val intent = Intent(requireContext(), MainActivity::class.java)
+                startActivity(intent)
+                requireActivity().finish() // Finish the current activity
+            }
+        }
+        return true
     }
 }

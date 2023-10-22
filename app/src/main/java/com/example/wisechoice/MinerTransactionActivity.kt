@@ -14,7 +14,7 @@ import androidx.drawerlayout.widget.DrawerLayout
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.google.android.material.navigation.NavigationView
 
-class MinerTransactionActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelectedListener {
+class MinerTransactionActivity : AppCompatActivity() {
 
     var st_phone: String? = null
     var miner_bottom: BottomNavigationView? = null
@@ -22,15 +22,6 @@ class MinerTransactionActivity : AppCompatActivity(), NavigationView.OnNavigatio
     var addToBlockFragment: AddToBlockFragment = AddToBlockFragment()
     var addTransactionFragment: AddTransactionFragment = AddTransactionFragment()
     var mineFragment: MineFragment = MineFragment()
-
-    var username: TextView? = null
-    var phone: TextView? = null
-    var photo: ImageView? = null
-    var home_menu: ImageView? = null
-
-    var drawerLayout: DrawerLayout? = null
-    var navigationView: NavigationView? = null
-    var nView: View? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -60,48 +51,9 @@ class MinerTransactionActivity : AppCompatActivity(), NavigationView.OnNavigatio
             }
             true
         }
-
-        drawerLayout = findViewById<DrawerLayout>(R.id.drawer)
-        val actionBarDrawerToggle = ActionBarDrawerToggle(
-            this, drawerLayout,
-            R.string.navigation_drawer_open, R.string.navigation_drawer_close
-        )
-        actionBarDrawerToggle.syncState()
-
-        navigationView = findViewById<NavigationView>(R.id.navigation)
-        nView = navigationView?.getHeaderView(0)
-        username = nView?.findViewById<TextView>(R.id.username)
-        phone = nView?.findViewById<TextView>(R.id.phone)
-        photo = nView?.findViewById<ImageView>(R.id.photo)
-        home_menu = findViewById<ImageView>(R.id.home_menu)
-
-        home_menu?.setOnClickListener {
-            drawerLayout?.openDrawer(GravityCompat.START)
-        }
-
-        navigationView?.setNavigationItemSelectedListener(this)
     }
 
     companion object {
         const val SHARED_PREF_NAME = "myPref"
-    }
-
-    override fun onNavigationItemSelected(item: MenuItem): Boolean {
-        when (item.itemId) {
-            R.id.block_queue -> {
-                val intent2 = Intent(this, BlockQueueActivity::class.java)
-                startActivity(intent2)
-            }
-            R.id.blockchain -> {
-                val intent2 = Intent(this, BlockchainActivity::class.java)
-                startActivity(intent2)
-            }
-            R.id.logout -> {
-                Toast.makeText(this, "Logged out", Toast.LENGTH_SHORT).show()
-                val intent = Intent(this, MainActivity::class.java)
-                startActivity(intent)
-            }
-        }
-        return true
     }
 }

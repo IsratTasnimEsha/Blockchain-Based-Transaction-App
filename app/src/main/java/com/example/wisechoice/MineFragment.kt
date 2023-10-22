@@ -195,7 +195,7 @@ class MineFragment : Fragment(), NavigationView.OnNavigationItemSelectedListener
 
                     // Update the TextView with the changing hash
                     requireActivity().runOnUiThread() {
-                        hashText.text = "$hashedString"
+                        hashText.text = "Hash: $hashedString"
                     }
 
                     // Add a delay of 1 second (adjust as needed)
@@ -206,7 +206,7 @@ class MineFragment : Fragment(), NavigationView.OnNavigationItemSelectedListener
                 val blockVal = FirebaseDatabase.getInstance().getReference("miners")
                     .child(st_phone).child("block_queue").push()
 
-
+                blockVal.child("Block_ID").setValue(blockVal.key)
                 blockVal.child("Block_Hash").setValue("$hashedString")
                 blockVal.child("Nonce").setValue(randomNotch)
                 blockVal.child("Miner").setValue(st_phone)

@@ -12,11 +12,13 @@ import android.widget.TextView
 import androidx.cardview.widget.CardView
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.example.wisechoice.R
+import com.example.wisechoice.TransactionDetailsActivity
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
-import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
+import java.security.MessageDigest
 
 class MineBlockAdapter(
     private val context: Context,
@@ -81,6 +83,7 @@ class MineFragment : Fragment() {
     private lateinit var recyclerView: RecyclerView
     private lateinit var adapterClass: MineBlockAdapter
     private lateinit var mineButton: Button
+    private lateinit var hashText: TextView
 
     private val senders = mutableListOf<String>()
     private val receivers = mutableListOf<String>()
@@ -121,14 +124,91 @@ class MineFragment : Fragment() {
 
         mineButton = view.findViewById(R.id.mine_button)
 
+        // Initialize the TextView for hash text
+        hashText = view.findViewById(R.id.hash_text)
+
         mineButton.setOnClickListener {
-            // Handle the "Mine" button click action here
             val st_phone = sharedPreferences.getString("Phone", "") ?: ""
 
-            // Iterate through the temporary blocks and update "Verify" of corresponding transactions
+            // 1. Concatenate all the transaction rows into a single string
+            val concatenatedTransactions = StringBuilder()
+
             for (idValue in ids) {
-                mineTransactions(st_phone, idValue)
+                val sender = senders[ids.indexOf(idValue)]
+                val receiver = receivers[ids.indexOf(idValue)]
+                val amount = amounts[ids.indexOf(idValue)]
+                val fees = feeses[ids.indexOf(idValue)]
+
+                val transactionInfo = "Sender: $sender, Receiver: $receiver, Amount: $amount, Fees: $fees\n"
+                concatenatedTransactions.append(transactionInfo)
             }
+
+            val concatenatedString = concatenatedTransactions.toString()
+
+            var hashedString: String
+            var randomNotch: Int
+            Thread {
+                do {
+                    // 2. Add a 5-digit random notch to the concatenated string
+                    randomNotch = (10000..99999).random()
+                    val stringWithNotch = "$randomNotch$concatenatedString"
+
+                    // 3. Create a hash of the final string
+                    hashedString = hashString(stringWithNotch)
+
+                    // Update the TextView with the changing hash
+                    requireActivity().runOnUiThread() {
+                        hashText.text = "$hashedString"
+                    }
+
+                    // Add a delay of 1 second (adjust as needed)
+                    Thread.sleep(10)
+
+                } while (!hashedString.startsWith("00"))
+
+                val blockVal = FirebaseDatabase.getInstance().getReference("miners")
+                    .child(st_phone).child("blocks").push()
+
+
+                blockVal.child("Block_Hash").setValue("$hashedString")
+                blockVal.child("Nonce").setValue(randomNotch)
+                blockVal.child("Miner").setValue(st_phone)
+
+                val blockRef = blockVal.child("transaction_details")
+
+                for (idValue in ids) {
+                    val transactionRef = FirebaseDatabase.getInstance().getReference("miners")
+                        .child(st_phone).child("transactions")
+
+                    val query = transactionRef.orderByChild("Transaction_ID").equalTo(idValue)
+                    query.addListenerForSingleValueEvent(object : ValueEventListener {
+
+                        override fun onDataChange(transactionSnapshot: DataSnapshot) {
+                            for (transactionData in transactionSnapshot.children) {
+                                val transactionId = transactionData.key.toString()
+                                val transactionVerifyRef = transactionRef.child(transactionId)
+                                    .child("Verify")
+
+                                transactionVerifyRef.setValue("Processing...")
+                                blockRef.child(transactionId).child("Transaction_ID").setValue(ids[ids.indexOf(idValue)])
+                                blockRef.child(transactionId).child("Sender").setValue(senders[ids.indexOf(idValue)])
+                                blockRef.child(transactionId).child("Receiver").setValue(receivers[ids.indexOf(idValue)])
+                            }
+                        }
+                        override fun onCancelled(error: DatabaseError) {
+                        // Handle the error
+                        }
+                    })
+                    // Remove the corresponding item from temporary_blocks
+                    val tempTransactionRef = FirebaseDatabase.getInstance().getReference("miners")
+                        .child(st_phone).child("temporary_blocks").child(idValue)
+
+                    tempTransactionRef.removeValue()
+                }
+
+            }.start()
+
+            // Use 'hashedString' as needed for your application
         }
 
         tempBlocksReference.addValueEventListener(object : ValueEventListener {
@@ -163,30 +243,16 @@ class MineFragment : Fragment() {
         })
     }
 
-    private fun mineTransactions(st_phone: String, idValue: String) {
-        val transactionRef = FirebaseDatabase.getInstance().getReference("miners")
-            .child(st_phone).child("transactions")
+    private fun hashString(input: String): String {
+        val bytes = input.toByteArray()
+        val md = MessageDigest.getInstance("SHA-256")
+        val digest = md.digest(bytes)
 
-        val query = transactionRef.orderByChild("Transaction_ID").equalTo(idValue)
+        val hexString = StringBuilder()
+        for (byte in digest) {
+            hexString.append(String.format("%02x", byte))
+        }
 
-        query.addListenerForSingleValueEvent(object : ValueEventListener {
-            override fun onDataChange(transactionSnapshot: DataSnapshot) {
-                for (transactionData in transactionSnapshot.children) {
-                    val transactionId = transactionData.key.toString()
-                    val transactionVerifyRef = transactionRef.child(transactionId)
-                        .child("Verify")
-                    transactionVerifyRef.setValue("Processing...")
-                }
-            }
-
-            override fun onCancelled(error: DatabaseError) {
-                // Handle the error
-            }
-        })
-
-        // Remove the corresponding item from temporary_blocks
-        val tempTransactionRef = FirebaseDatabase.getInstance().getReference("miners")
-            .child(st_phone).child("temporary_blocks").child(idValue)
-        tempTransactionRef.removeValue()
+        return hexString.toString()
     }
 }

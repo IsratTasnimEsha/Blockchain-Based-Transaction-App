@@ -6,6 +6,7 @@ import android.view.MenuItem
 import android.view.View
 import android.widget.ImageView
 import android.widget.TextView
+import android.widget.Toast
 import androidx.appcompat.app.ActionBarDrawerToggle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.GravityCompat
@@ -88,7 +89,6 @@ class MinerTransactionActivity : AppCompatActivity(), NavigationView.OnNavigatio
     override fun onNavigationItemSelected(item: MenuItem): Boolean {
         when (item.itemId) {
             R.id.block_queue -> {
-
                 val intent2 = Intent(this, BlockQueueActivity::class.java)
                 startActivity(intent2)
             }
@@ -97,9 +97,9 @@ class MinerTransactionActivity : AppCompatActivity(), NavigationView.OnNavigatio
                 startActivity(intent2)
             }
             R.id.logout -> {
+                Toast.makeText(this, "Logged out", Toast.LENGTH_SHORT).show()
                 val intent = Intent(this, MainActivity::class.java)
                 startActivity(intent)
-                finish() // Finish the current activity
             }
         }
         return true

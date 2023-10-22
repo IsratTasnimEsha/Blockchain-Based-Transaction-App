@@ -114,6 +114,10 @@ class TempBlockAdapter(
                     .child("temporary_blocks").child(idValue)
 
                 tempTransactionRef.child("Transaction_ID").setValue("${ids[position]}")
+                tempTransactionRef.child("Sender").setValue("${senders[position]}")
+                tempTransactionRef.child("Receiver").setValue("${receivers[position]}")
+                tempTransactionRef.child("Amount").setValue("${amounts[position]}")
+                tempTransactionRef.child("Fees").setValue("${feeses[position]}")
             }
         }
 

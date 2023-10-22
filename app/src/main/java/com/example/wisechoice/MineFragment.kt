@@ -142,7 +142,7 @@ class MineFragment : Fragment(), NavigationView.OnNavigationItemSelectedListener
         val st_phone = sharedPreferences.getString("Phone", "") ?: ""
 
         val tempBlocksReference = FirebaseDatabase.getInstance().getReference("miners")
-            .child(st_phone).child("transactions")
+            .child(st_phone).child("temporary_blocks")
 
         recyclerView = view.findViewById(R.id.recycler)
         recyclerView.setHasFixedSize(true)
@@ -175,7 +175,8 @@ class MineFragment : Fragment(), NavigationView.OnNavigationItemSelectedListener
                 val amount = amounts[ids.indexOf(idValue)]
                 val fees = feeses[ids.indexOf(idValue)]
 
-                val transactionInfo = "Sender: $sender, Receiver: $receiver, Amount: $amount, Fees: $fees\n"
+                val transactionInfo =
+                    "Sender: $sender, Receiver: $receiver, Amount: $amount, Fees: $fees\n"
                 concatenatedTransactions.append(transactionInfo)
             }
 
@@ -203,7 +204,7 @@ class MineFragment : Fragment(), NavigationView.OnNavigationItemSelectedListener
                 } while (!hashedString.startsWith("00"))
 
                 val blockVal = FirebaseDatabase.getInstance().getReference("miners")
-                    .child(st_phone).child("blocks").push()
+                    .child(st_phone).child("block_queue").push()
 
 
                 blockVal.child("Block_Hash").setValue("$hashedString")
@@ -226,9 +227,12 @@ class MineFragment : Fragment(), NavigationView.OnNavigationItemSelectedListener
                                     .child("Verify")
 
                                 transactionVerifyRef.setValue("Processing...")
-                                blockRef.child(transactionId).child("Transaction_ID").setValue(ids[ids.indexOf(idValue)])
+
+                                blockRef.child(transactionId).child("Transaction_ID")
+                                    .setValue(ids[ids.indexOf(idValue)])
                             }
                         }
+
                         override fun onCancelled(error: DatabaseError) {
                             // Handle the error
                         }
@@ -240,9 +244,41 @@ class MineFragment : Fragment(), NavigationView.OnNavigationItemSelectedListener
                     tempTransactionRef.removeValue()
                 }
 
-            }.start()
+                val sourceMinerBlocksRef = FirebaseDatabase.getInstance().getReference("miners")
+                    .child(st_phone)
+                    .child("block_queue")
 
-            // Use 'hashedString' as needed for your application
+                sourceMinerBlocksRef.addListenerForSingleValueEvent(object : ValueEventListener {
+                    override fun onDataChange(sourceSnapshot: DataSnapshot) {
+                        if (sourceSnapshot.exists()) {
+                            val blockData = sourceSnapshot.value
+
+                            val minersRef = FirebaseDatabase.getInstance().getReference("miners")
+                            minersRef.addListenerForSingleValueEvent(object : ValueEventListener {
+                                override fun onDataChange(minersSnapshot: DataSnapshot) {
+                                    for (minerSnapshot in minersSnapshot.children) {
+                                        val minerId = minerSnapshot.key
+                                        if (minerId != st_phone) {
+                                            val minerBlocksRef = minersRef.child(minerId.toString()).child("block_queue")
+                                            val newBlockRef = minerBlocksRef
+                                            newBlockRef.setValue(blockData)
+                                        }
+                                    }
+                                }
+
+                                override fun onCancelled(minersError: DatabaseError) {
+                                    // Handle the error
+                                }
+                            })
+                        }
+                    }
+
+                    override fun onCancelled(sourceError: DatabaseError) {
+                        // Handle the error
+                    }
+                })
+
+            }.start()
         }
 
         tempBlocksReference.addValueEventListener(object : ValueEventListener {

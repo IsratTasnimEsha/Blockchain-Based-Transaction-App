@@ -2,6 +2,7 @@ package com.example.wisechoice
 
 import android.content.Context
 import android.content.Intent
+import android.os.Build
 import android.os.Bundle
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
@@ -9,6 +10,7 @@ import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
+import androidx.annotation.RequiresApi
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.appcompat.app.ActionBarDrawerToggle
@@ -25,6 +27,8 @@ import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
 import java.security.MessageDigest
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 
 class MineBlockAdapter(
     private val context: Context,
@@ -114,6 +118,7 @@ class MineFragment : Fragment(), NavigationView.OnNavigationItemSelectedListener
         return inflater.inflate(R.layout.fragment_mine, container, false)
     }
 
+    @RequiresApi(Build.VERSION_CODES.O)
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
@@ -211,7 +216,51 @@ class MineFragment : Fragment(), NavigationView.OnNavigationItemSelectedListener
                 blockVal.child("Nonce").setValue(randomNotch)
                 blockVal.child("Miner").setValue(st_phone)
 
+                val currentDateTime = LocalDateTime.now()
+                val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
+                val formattedDateTime = currentDateTime.format(formatter)
+
+                blockVal.child("Mined_Time").setValue(formattedDateTime.toString())
+                blockVal.child("Status").setValue("In Queue")
+
+                val st_phone = sharedPreferences.getString("Phone", "") ?: ""
+
+                val minersRef = FirebaseDatabase.getInstance().getReference("miners")
+                val blockQueueRef = minersRef.child(st_phone).child("block_queue")
+
+                blockQueueRef.orderByKey().limitToLast(2).addListenerForSingleValueEvent(object : ValueEventListener {
+                    override fun onDataChange(dataSnapshot: DataSnapshot) {
+                        val blockList = dataSnapshot.children.toList()
+
+                        if (blockList.size == 1) {
+                            // Only one block in the block_queue
+                            val previousHash = "000000000000000000000000000000000000000000000000000000000000000000"
+                            blockList.firstOrNull()?.let { blockData ->
+                                val blockHash = blockData.child("Block_Hash").value.toString()
+
+                                blockVal.child("Previous_Hash").setValue(previousHash)
+                            }
+                        } else if (blockList.size >= 2) {
+                            // Two or more blocks in the block_queue
+                            val lastBlock = blockList.last()
+                            val previousBlock = blockList[blockList.size - 2]
+
+                            val lastBlockHash = lastBlock.child("Block_Hash").value.toString()
+                            val previousHash = previousBlock.child("Block_Hash").value.toString()
+
+                            blockVal.child("Previous_Hash").setValue(previousHash)
+                        }
+                    }
+
+                    override fun onCancelled(databaseError: DatabaseError) {
+                        // Handle the error
+                    }
+                })
+
                 val blockRef = blockVal.child("transaction_details")
+                var noOfTransactions = 0
+                var totalAmount = 0.0
+                var totalFees = 0.0
 
                 for (idValue in ids) {
                     val transactionRef = FirebaseDatabase.getInstance().getReference("miners")
@@ -228,8 +277,27 @@ class MineFragment : Fragment(), NavigationView.OnNavigationItemSelectedListener
 
                                 transactionVerifyRef.setValue("Processing...")
 
+                                noOfTransactions++
+
+                                val index = ids.indexOf(idValue)
+                                if (index != -1) {
+                                    val amount = amounts[index].toDoubleOrNull() ?: 0.0
+                                    totalAmount += amount
+
+                                    val fees = feeses[index].toDoubleOrNull() ?: 0.0
+                                    totalFees += fees
+                                }
+
                                 blockRef.child(transactionId).child("Transaction_ID")
                                     .setValue(ids[ids.indexOf(idValue)])
+                                blockRef.child(transactionId).child("Amount")
+                                    .setValue(amounts[ids.indexOf(idValue)])
+                                blockRef.child(transactionId).child("Fees")
+                                    .setValue(feeses[ids.indexOf(idValue)])
+
+                                blockVal.child("No_Of_Transactions").setValue(noOfTransactions)
+                                blockVal.child("Total_Amount").setValue(totalAmount)
+                                blockVal.child("Total_Fees").setValue(totalFees)
                             }
                         }
 

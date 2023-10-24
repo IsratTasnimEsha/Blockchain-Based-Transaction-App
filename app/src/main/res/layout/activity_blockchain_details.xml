@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".BlockDetailsActivity">
+    tools:context=".BlockchainDetailsActivity">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -296,7 +296,7 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="Verify"
+                android:text="Status"
                 android:textStyle="bold"
                 android:gravity="center"/>
 
@@ -307,26 +307,6 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content" />
 
-
-        <androidx.cardview.widget.CardView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:layout_marginTop="15dp"
-            android:layout_marginBottom="15dp"
-            android:layout_marginLeft="70dp"
-            android:layout_marginRight="70dp"
-            android:layout_gravity="center"
-            app:cardCornerRadius="8dp">
-
-            <Button
-                android:id="@+id/accept_button"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:background="@color/dark_gray"
-                android:text="Accept"
-                android:textColor="@color/white" />
-        </androidx.cardview.widget.CardView>
-
     </LinearLayout>
+
 </ScrollView>

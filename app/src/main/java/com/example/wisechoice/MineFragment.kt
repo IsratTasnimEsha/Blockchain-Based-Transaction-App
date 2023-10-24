@@ -60,7 +60,7 @@ class MineBlockAdapter(
             // Update the "Verify" field of the corresponding transaction to "Verified"
             val newTransactionRef = FirebaseDatabase.getInstance().getReference("miners")
                 .child(st_phone).child("transactions").child(idValue)
-            newTransactionRef.child("Verify").setValue("Verified")
+            newTransactionRef.child("Status").setValue("Verified")
 
             // Remove the corresponding item from temporary_blocks
             val tempTransactionRef = FirebaseDatabase.getInstance().getReference("miners")
@@ -123,7 +123,7 @@ class MineFragment : Fragment(), NavigationView.OnNavigationItemSelectedListener
         super.onViewCreated(view, savedInstanceState)
 
         drawerLayout = view.findViewById<DrawerLayout>(R.id.drawer)
-        // Use the activity context to initialize ActionBarDrawerToggle
+
         val actionBarDrawerToggle = ActionBarDrawerToggle(
             requireActivity(), drawerLayout,
             R.string.navigation_drawer_open, R.string.navigation_drawer_close
@@ -165,13 +165,11 @@ class MineFragment : Fragment(), NavigationView.OnNavigationItemSelectedListener
 
         mineButton = view.findViewById(R.id.mine_button)
 
-        // Initialize the TextView for hash text
         hashText = view.findViewById(R.id.hash_text)
 
         mineButton.setOnClickListener {
             val st_phone = sharedPreferences.getString("Phone", "") ?: ""
 
-            // 1. Concatenate all the transaction rows into a single string
             val concatenatedTransactions = StringBuilder()
 
             for (idValue in ids) {
@@ -191,19 +189,15 @@ class MineFragment : Fragment(), NavigationView.OnNavigationItemSelectedListener
             var randomNotch: Int
             Thread {
                 do {
-                    // 2. Add a 5-digit random notch to the concatenated string
                     randomNotch = (10000..99999).random()
                     val stringWithNotch = "$randomNotch$concatenatedString"
 
-                    // 3. Create a hash of the final string
                     hashedString = hashString(stringWithNotch)
 
-                    // Update the TextView with the changing hash
                     requireActivity().runOnUiThread() {
                         hashText.text = "Hash: $hashedString"
                     }
 
-                    // Add a delay of 1 second (adjust as needed)
                     Thread.sleep(10)
 
                 } while (!hashedString.startsWith("00"))
@@ -215,13 +209,13 @@ class MineFragment : Fragment(), NavigationView.OnNavigationItemSelectedListener
                 blockVal.child("Block_Hash").setValue("$hashedString")
                 blockVal.child("Nonce").setValue(randomNotch)
                 blockVal.child("Miner").setValue(st_phone)
+                blockVal.child("Size").setValue(((hashedString.length - 5) * 4).toString())
 
                 val currentDateTime = LocalDateTime.now()
                 val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
                 val formattedDateTime = currentDateTime.format(formatter)
 
                 blockVal.child("Mined_Time").setValue(formattedDateTime.toString())
-                blockVal.child("Status").setValue("In Queue")
 
                 val st_phone = sharedPreferences.getString("Phone", "") ?: ""
 
@@ -233,19 +227,13 @@ class MineFragment : Fragment(), NavigationView.OnNavigationItemSelectedListener
                         val blockList = dataSnapshot.children.toList()
 
                         if (blockList.size == 1) {
-                            // Only one block in the block_queue
                             val previousHash = "000000000000000000000000000000000000000000000000000000000000000000"
-                            blockList.firstOrNull()?.let { blockData ->
-                                val blockHash = blockData.child("Block_Hash").value.toString()
 
+                            blockList.firstOrNull()?.let { blockData ->
                                 blockVal.child("Previous_Hash").setValue(previousHash)
                             }
                         } else if (blockList.size >= 2) {
-                            // Two or more blocks in the block_queue
-                            val lastBlock = blockList.last()
                             val previousBlock = blockList[blockList.size - 2]
-
-                            val lastBlockHash = lastBlock.child("Block_Hash").value.toString()
                             val previousHash = previousBlock.child("Block_Hash").value.toString()
 
                             blockVal.child("Previous_Hash").setValue(previousHash)
@@ -253,7 +241,7 @@ class MineFragment : Fragment(), NavigationView.OnNavigationItemSelectedListener
                     }
 
                     override fun onCancelled(databaseError: DatabaseError) {
-                        // Handle the error
+
                     }
                 })
 
@@ -273,7 +261,7 @@ class MineFragment : Fragment(), NavigationView.OnNavigationItemSelectedListener
                             for (transactionData in transactionSnapshot.children) {
                                 val transactionId = transactionData.key.toString()
                                 val transactionVerifyRef = transactionRef.child(transactionId)
-                                    .child("Verify")
+                                    .child("Status")
 
                                 transactionVerifyRef.setValue("Processing...")
 
@@ -290,10 +278,16 @@ class MineFragment : Fragment(), NavigationView.OnNavigationItemSelectedListener
 
                                 blockRef.child(transactionId).child("Transaction_ID")
                                     .setValue(ids[ids.indexOf(idValue)])
+                                blockRef.child(transactionId).child("Sender")
+                                    .setValue(senders[ids.indexOf(idValue)])
+                                blockRef.child(transactionId).child("Receiver")
+                                    .setValue(receivers[ids.indexOf(idValue)])
                                 blockRef.child(transactionId).child("Amount")
                                     .setValue(amounts[ids.indexOf(idValue)])
                                 blockRef.child(transactionId).child("Fees")
                                     .setValue(feeses[ids.indexOf(idValue)])
+                                blockRef.child(transactionId).child("Status")
+                                    .setValue("Unrecognized")
 
                                 blockVal.child("No_Of_Transactions").setValue(noOfTransactions)
                                 blockVal.child("Total_Amount").setValue(totalAmount)
@@ -302,49 +296,48 @@ class MineFragment : Fragment(), NavigationView.OnNavigationItemSelectedListener
                         }
 
                         override fun onCancelled(error: DatabaseError) {
-                            // Handle the error
+
                         }
                     })
-                    // Remove the corresponding item from temporary_blocks
+
                     val tempTransactionRef = FirebaseDatabase.getInstance().getReference("miners")
                         .child(st_phone).child("temporary_blocks").child(idValue)
 
                     tempTransactionRef.removeValue()
                 }
 
-                val sourceMinerBlocksRef = FirebaseDatabase.getInstance().getReference("miners")
-                    .child(st_phone)
-                    .child("block_queue")
+                val minerRef = FirebaseDatabase.getInstance().getReference("miners")
 
-                sourceMinerBlocksRef.addListenerForSingleValueEvent(object : ValueEventListener {
-                    override fun onDataChange(sourceSnapshot: DataSnapshot) {
-                        if (sourceSnapshot.exists()) {
-                            val blockData = sourceSnapshot.value
+                minersRef.addListenerForSingleValueEvent(object : ValueEventListener {
+                    override fun onDataChange(dataSnapshot: DataSnapshot) {
+                        for (childSnapshot in dataSnapshot.children) {
+                            val childKey = childSnapshot.key
 
-                            val minersRef = FirebaseDatabase.getInstance().getReference("miners")
-                            minersRef.addListenerForSingleValueEvent(object : ValueEventListener {
-                                override fun onDataChange(minersSnapshot: DataSnapshot) {
-                                    for (minerSnapshot in minersSnapshot.children) {
-                                        val minerId = minerSnapshot.key
-                                        if (minerId != st_phone) {
-                                            val minerBlocksRef = minersRef.child(minerId.toString()).child("block_queue")
-                                            val newBlockRef = minerBlocksRef
-                                            newBlockRef.setValue(blockData)
+                            val blockchainReference =
+                                FirebaseDatabase.getInstance().getReference("miners")
+                                    .child(childKey.toString()).child("block_queue").child(blockVal.key.toString())
+
+                            FirebaseDatabase.getInstance().getReference("miners").child(st_phone)
+                                .child("block_queue").child(blockVal.key.toString())
+                                .addListenerForSingleValueEvent(object : ValueEventListener {
+                                    override fun onDataChange(snapshot: DataSnapshot) {
+                                        if (snapshot.exists()) {
+                                            blockchainReference.setValue(snapshot.value)
                                         }
                                     }
-                                }
 
-                                override fun onCancelled(minersError: DatabaseError) {
-                                    // Handle the error
-                                }
-                            })
+                                    override fun onCancelled(error: DatabaseError) {
+
+                                    }
+                                })
                         }
                     }
 
-                    override fun onCancelled(sourceError: DatabaseError) {
-                        // Handle the error
+                    override fun onCancelled(databaseError: DatabaseError) {
+                        // Handle errors
                     }
                 })
+
 
             }.start()
         }
@@ -363,7 +356,7 @@ class MineFragment : Fragment(), NavigationView.OnNavigationItemSelectedListener
                     val receiver = dataSnapshot.child("Receiver").value.toString()
                     val amount = dataSnapshot.child("Amount").value.toString()
                     val fees = dataSnapshot.child("Fees").value.toString()
-                    val verify = dataSnapshot.child("Verify").value.toString()
+                    val verify = dataSnapshot.child("Status").value.toString()
                     val transaction_time = dataSnapshot.child("Transaction_Time").value.toString()
                     val id = dataSnapshot.child("Transaction_ID").value.toString()
 
@@ -405,9 +398,9 @@ class MineFragment : Fragment(), NavigationView.OnNavigationItemSelectedListener
                 startActivity(intent2)
             }
             R.id.logout -> {
-                val intent = Intent(requireContext(), MainActivity::class.java)
+                val intent = Intent(requireContext(), SignInActivity::class.java)
                 startActivity(intent)
-                requireActivity().finish() // Finish the current activity
+                requireActivity().finish()
             }
         }
         return true

@@ -19,7 +19,7 @@ import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
 
-class BlockDetailsAdapter(
+class BlockchainDetailsAdapter(
     private val context: Context,
     private val senders: List<String>,
     private val receivers: List<String>,
@@ -32,10 +32,10 @@ class BlockDetailsAdapter(
 
     private var databaseReference: DatabaseReference = FirebaseDatabase.getInstance().getReference()
 
-) : RecyclerView.Adapter<BlockDetailsAdapter.MyViewHolder>() {
+) : RecyclerView.Adapter<BlockchainDetailsAdapter.MyViewHolder>() {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): MyViewHolder {
-        val view: View = LayoutInflater.from(context).inflate(R.layout.temp_block_xml, parent, false)
+        val view: View = LayoutInflater.from(context).inflate(R.layout.blockchain, parent, false)
         return MyViewHolder(view)
     }
 
@@ -49,35 +49,15 @@ class BlockDetailsAdapter(
         val idValue = ids[position]
 
         if(verifies[position] == "Unrecognized") {
-            holder.verify_button.isEnabled = true
-            holder.verify_button.text = "Verify"
             holder.transaction_card.setBackgroundColor(ContextCompat.getColor(context, R.color.white))
         }
 
         else if(verifies[position] == "Verified") {
-            holder.verify_button.isEnabled = false
             holder.transaction_card.setBackgroundColor(ContextCompat.getColor(context, R.color.green))
         }
 
         else if(verifies[position] == "Not Verified") {
-            holder.verify_button.isEnabled = false
             holder.transaction_card.setBackgroundColor(ContextCompat.getColor(context, R.color.dark_green ))
-        }
-
-        holder.verify_button.setOnClickListener {
-            val sharedPreferences =
-                context.getSharedPreferences("MySharedPref", Context.MODE_PRIVATE)
-            val st_phone = sharedPreferences.getString("Phone", "") ?: ""
-
-            if(holder.verify.text == "Unrecognized") {
-                val newTransactionRef = databaseReference.child("miners").child(st_phone)
-                    .child("block_queue").child(st_id).child("transaction_details").child(idValue)
-                newTransactionRef.child("Status").setValue("Verified")
-
-                holder.verify.text = "Verified"
-                holder.verify_button.isEnabled = true
-                holder.transaction_card.setBackgroundColor(ContextCompat.getColor(context, R.color.green))
-            }
         }
 
         holder.transaction_card.setOnClickListener {
@@ -99,12 +79,11 @@ class BlockDetailsAdapter(
         var amount: TextView = itemView.findViewById(R.id.amount)
         var fees: TextView = itemView.findViewById(R.id.fees)
         var verify: TextView = itemView.findViewById(R.id.verify)
-        var verify_button: Button = itemView.findViewById(R.id.verify_button)
         var transaction_card = itemView.findViewById<CardView>(R.id.transaction_card)
     }
 }
 
-class BlockDetailsActivity : AppCompatActivity() {
+class BlockchainDetailsActivity : AppCompatActivity() {
 
     private lateinit var st_id: String
     private lateinit var blockIDTextView: TextView
@@ -117,12 +96,11 @@ class BlockDetailsActivity : AppCompatActivity() {
     private lateinit var sizeTextView: TextView
     private lateinit var totalFeesTextView: TextView
     private lateinit var minedTextView: TextView
-    private lateinit var acceptButton: Button
 
     private lateinit var databaseReference: DatabaseReference
 
     private lateinit var recyclerView: RecyclerView
-    private lateinit var adapterClass: BlockDetailsAdapter
+    private lateinit var adapterClass: BlockchainDetailsAdapter
 
     private val senders = mutableListOf<String>()
     private val receivers = mutableListOf<String>()
@@ -134,7 +112,7 @@ class BlockDetailsActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_block_details)
+        setContentView(R.layout.activity_blockchain_details)
 
         blockIDTextView = findViewById(R.id.block_id)
         blockHashTextView = findViewById(R.id.block_hash)
@@ -146,7 +124,6 @@ class BlockDetailsActivity : AppCompatActivity() {
         sizeTextView= findViewById(R.id.size)
         totalFeesTextView= findViewById(R.id.total_fees)
         minedTextView= findViewById(R.id.mined)
-        acceptButton = findViewById(R.id.accept_button)
 
         st_id = intent.getStringExtra("block_id") ?: ""
 
@@ -156,12 +133,12 @@ class BlockDetailsActivity : AppCompatActivity() {
         fetchTransactionDetails(st_phone)
 
         databaseReference = FirebaseDatabase.getInstance().getReference("miners").child(st_phone)
-            .child("block_queue").child(st_id).child("transaction_details")
+            .child("blockchain").child(st_id).child("transaction_details")
 
         recyclerView = findViewById(R.id.recycler)
         recyclerView.setHasFixedSize(true)
         recyclerView.layoutManager = LinearLayoutManager(this)
-        adapterClass = BlockDetailsAdapter(
+        adapterClass = BlockchainDetailsAdapter(
             this,
             senders,
             receivers,
@@ -210,7 +187,7 @@ class BlockDetailsActivity : AppCompatActivity() {
 
     private fun fetchTransactionDetails(st_phone: String) {
         databaseReference = FirebaseDatabase.getInstance().getReference("miners").child(st_phone)
-            .child("block_queue").child(st_id)
+            .child("blockchain").child(st_id)
 
         databaseReference.addListenerForSingleValueEvent(object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
@@ -236,43 +213,6 @@ class BlockDetailsActivity : AppCompatActivity() {
                     sizeTextView.text = size
                     totalFeesTextView.text = totalFees
                     minedTextView.text = minedTime
-
-                    acceptButton.setOnClickListener {
-                        val blockchainReference = FirebaseDatabase.getInstance().getReference("miners")
-                            .child(st_phone).child("blockchain").child(st_id)
-
-                        FirebaseDatabase.getInstance().getReference("miners").child(st_phone)
-                            .child("block_queue").child(st_id)
-                            .addListenerForSingleValueEvent(object : ValueEventListener {
-                                override fun onDataChange(snapshot: DataSnapshot) {
-                                    if (snapshot.exists()) {
-                                        blockchainReference.setValue(snapshot.value)
-
-                                        for (childSnapshot in snapshot.child("transaction_details").children) {
-                                            val childKey = childSnapshot.key
-
-                                            if (childKey != null) {
-                                                FirebaseDatabase.getInstance().getReference("miners").child(st_phone)
-                                                    .child("transactions").child(childKey)
-                                                    .child("Status").setValue("Blocked")
-
-                                                FirebaseDatabase.getInstance().getReference("miners").child(st_phone)
-                                                    .child("transactions").child(childKey)
-                                                    .child("Block_No").setValue(st_id)
-                                            }
-                                        }
-                                    }
-                                }
-
-                                override fun onCancelled(error: DatabaseError) {
-
-                                }
-                            })
-
-
-                        FirebaseDatabase.getInstance().getReference("miners").child(st_phone)
-                            .child("block_queue").child(st_id).removeValue()
-                    }
                 }
             }
 

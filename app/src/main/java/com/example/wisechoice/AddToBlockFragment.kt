@@ -55,33 +55,75 @@ class TempBlockAdapter(
         val idValue = ids[position]
 
         if(verifies[position] == "Unrecognized") {
+            holder.sender.setTextColor(ContextCompat.getColor(context, R.color.olive))
+            holder.receiver.setTextColor(ContextCompat.getColor(context, R.color.olive))
+            holder.amount.setTextColor(ContextCompat.getColor(context, R.color.olive))
+            holder.fees.setTextColor(ContextCompat.getColor(context, R.color.olive))
+            holder.verify.setTextColor(ContextCompat.getColor(context, R.color.olive))
+
             holder.verify_button.isEnabled = true
             holder.verify_button.text = "Verify"
             holder.transaction_card.setBackgroundColor(ContextCompat.getColor(context, R.color.white))
         }
 
         else if(verifies[position] == "Verified") {
+            holder.sender.setTextColor(ContextCompat.getColor(context, R.color.olive))
+            holder.receiver.setTextColor(ContextCompat.getColor(context, R.color.olive))
+            holder.amount.setTextColor(ContextCompat.getColor(context, R.color.olive))
+            holder.fees.setTextColor(ContextCompat.getColor(context, R.color.olive))
+            holder.verify.setTextColor(ContextCompat.getColor(context, R.color.olive))
+
             holder.verify_button.isEnabled = true
             holder.verify_button.text = "Add To Block"
             holder.transaction_card.setBackgroundColor(ContextCompat.getColor(context, R.color.green))
         }
 
         else if(verifies[position] == "Not Verified") {
+            holder.sender.setTextColor(ContextCompat.getColor(context, R.color.olive))
+            holder.receiver.setTextColor(ContextCompat.getColor(context, R.color.olive))
+            holder.amount.setTextColor(ContextCompat.getColor(context, R.color.olive))
+            holder.fees.setTextColor(ContextCompat.getColor(context, R.color.olive))
+            holder.verify.setTextColor(ContextCompat.getColor(context, R.color.olive))
+
             holder.verify_button.isEnabled = false
             holder.verify_button.text = "Denied"
             holder.transaction_card.setBackgroundColor(ContextCompat.getColor(context, R.color.dark_green ))
         }
 
         else if(verifies[position] == "Temporary Blocked") {
+            holder.sender.setTextColor(ContextCompat.getColor(context, R.color.olive))
+            holder.receiver.setTextColor(ContextCompat.getColor(context, R.color.olive))
+            holder.amount.setTextColor(ContextCompat.getColor(context, R.color.olive))
+            holder.fees.setTextColor(ContextCompat.getColor(context, R.color.olive))
+            holder.verify.setTextColor(ContextCompat.getColor(context, R.color.olive))
+
             holder.verify_button.isEnabled = false
             holder.verify_button.text = "Wait"
             holder.transaction_card.setBackgroundColor(ContextCompat.getColor(context, R.color.yellow))
         }
 
         else if(verifies[position] == "Processing...") {
+            holder.sender.setTextColor(ContextCompat.getColor(context, R.color.olive))
+            holder.receiver.setTextColor(ContextCompat.getColor(context, R.color.olive))
+            holder.amount.setTextColor(ContextCompat.getColor(context, R.color.olive))
+            holder.fees.setTextColor(ContextCompat.getColor(context, R.color.olive))
+            holder.verify.setTextColor(ContextCompat.getColor(context, R.color.olive))
+
             holder.verify_button.isEnabled = false
             holder.verify_button.text = "Wait"
             holder.transaction_card.setBackgroundColor(ContextCompat.getColor(context, R.color.orange))
+        }
+
+        else if(verifies[position] == "Blocked") {
+            holder.sender.setTextColor(ContextCompat.getColor(context, R.color.white))
+            holder.receiver.setTextColor(ContextCompat.getColor(context, R.color.white))
+            holder.amount.setTextColor(ContextCompat.getColor(context, R.color.white))
+            holder.fees.setTextColor(ContextCompat.getColor(context, R.color.white))
+            holder.verify.setTextColor(ContextCompat.getColor(context, R.color.white))
+
+            holder.verify_button.isEnabled = false
+            holder.verify_button.text = "Done"
+            holder.transaction_card.setBackgroundColor(ContextCompat.getColor(context, R.color.olive))
         }
 
         holder.verify_button.setOnClickListener {
@@ -92,7 +134,7 @@ class TempBlockAdapter(
             if(holder.verify.text == "Unrecognized") {
                 val newTransactionRef = databaseReference.child("miners").child(st_phone)
                     .child("transactions").child(idValue)
-                newTransactionRef.child("Verify").setValue("Verified")
+                newTransactionRef.child("Status").setValue("Verified")
 
                 holder.verify.text = "Verified"
                 holder.verify_button.text = "Add To Block"
@@ -103,7 +145,7 @@ class TempBlockAdapter(
             else if(holder.verify.text == "Verified") {
                 val newTransactionRef = databaseReference.child("miners").child(st_phone)
                     .child("transactions").child(idValue)
-                newTransactionRef.child("Verify").setValue("Temporary Blocked")
+                newTransactionRef.child("Status").setValue("Temporary Blocked")
 
                 holder.verify.text = ""
                 holder.verify_button.text = "Temporary Blocked"
@@ -235,7 +277,7 @@ class AddToBlockFragment : Fragment(), NavigationView.OnNavigationItemSelectedLi
                     val receiver = dataSnapshot.child("Receiver").value.toString()
                     val amount = dataSnapshot.child("Amount").value.toString()
                     val fees = dataSnapshot.child("Fees").value.toString()
-                    val verify = dataSnapshot.child("Verify").value.toString()
+                    val verify = dataSnapshot.child("Status").value.toString()
                     val transaction_time = dataSnapshot.child("Transaction_Time").value.toString()
                     val id = dataSnapshot.child("Transaction_ID").value.toString()
 
@@ -265,7 +307,7 @@ class AddToBlockFragment : Fragment(), NavigationView.OnNavigationItemSelectedLi
                 startActivity(intent2)
             }
             R.id.logout -> {
-                val intent = Intent(requireContext(), MainActivity::class.java)
+                val intent = Intent(requireContext(), SignInActivity::class.java)
                 startActivity(intent)
                 requireActivity().finish() // Finish the current activity
             }

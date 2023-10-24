@@ -1,11 +1,187 @@
 package com.example.wisechoice
 
+import android.content.Context
+import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.view.LayoutInflater
+import android.view.MenuItem
+import android.view.View
+import android.view.ViewGroup
+import android.widget.ImageView
+import android.widget.TextView
+import androidx.appcompat.app.ActionBarDrawerToggle
+import androidx.cardview.widget.CardView
+import androidx.core.view.GravityCompat
+import androidx.drawerlayout.widget.DrawerLayout
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
+import com.google.android.material.navigation.NavigationView
+import com.google.firebase.database.DataSnapshot
+import com.google.firebase.database.DatabaseError
+import com.google.firebase.database.DatabaseReference
+import com.google.firebase.database.FirebaseDatabase
+import com.google.firebase.database.ValueEventListener
 
-class BlockchainActivity : AppCompatActivity() {
+class BlockchainAdapter(
+    private val context: Context,
+    private val ids: List<String>,
+    private val miners: List<String>,
+    private val no_of_transactionss: List<String>,
+    private val total_sents: List<String>,
+    private val mined_times: List<String>,
+
+    private var databaseReference: DatabaseReference = FirebaseDatabase.getInstance().getReference()
+
+) : RecyclerView.Adapter<BlockchainAdapter.MyViewHolder>() {
+
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): MyViewHolder {
+        val view: View = LayoutInflater.from(context).inflate(R.layout.block, parent, false)
+        return MyViewHolder(view)
+    }
+
+    override fun onBindViewHolder(holder: MyViewHolder, position: Int) {
+
+        holder.miner.text = "${miners[position]}"
+        holder.no_of_transactions.text = "${no_of_transactionss[position]}"
+        holder.total_sent.text = "${total_sents[position]}"
+        holder.mined_time.text = "${mined_times[position]}"
+
+        val idValue = ids[position]
+
+        holder.block_card.setOnClickListener {
+
+            val intent = Intent(context, BlockchainDetailsActivity::class.java)
+
+            intent.putExtra("block_id", idValue)
+            context.startActivity(intent)
+        }
+    }
+
+    override fun getItemCount(): Int {
+        return ids.size
+    }
+
+    class MyViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+        var miner: TextView = itemView.findViewById(R.id.miner)
+        var no_of_transactions: TextView = itemView.findViewById(R.id.no_of_transactions)
+        var total_sent: TextView = itemView.findViewById(R.id.total_sent)
+        var mined_time: TextView = itemView.findViewById(R.id.mined_time)
+        var block_card = itemView.findViewById<CardView>(R.id.block_card)
+    }
+}
+
+class BlockchainActivity : AppCompatActivity() , NavigationView.OnNavigationItemSelectedListener {
+
+    private lateinit var recyclerView: RecyclerView
+    private lateinit var adapterClass: BlockchainAdapter
+
+    private lateinit var databaseReference: DatabaseReference
+
+    private val ids = mutableListOf<String>()
+    private val miners = mutableListOf<String>()
+    private val no_of_transactionss = mutableListOf<String>()
+    private val total_sents = mutableListOf<String>()
+    private val mined_times = mutableListOf<String>()
+
+    var drawerLayout: DrawerLayout? = null
+    var navigationView: NavigationView? = null
+    var nView: View? = null
+
+    var username: TextView? = null
+    var phone: TextView? = null
+    var photo: ImageView? = null
+    var home_menu: ImageView? = null
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_blockchain)
+
+        drawerLayout = findViewById<DrawerLayout>(R.id.drawer)
+
+        val actionBarDrawerToggle = ActionBarDrawerToggle(
+            this, drawerLayout,
+            R.string.navigation_drawer_open, R.string.navigation_drawer_close
+        )
+        actionBarDrawerToggle.syncState()
+
+        navigationView = findViewById<NavigationView>(R.id.navigation)
+        nView = navigationView?.getHeaderView(0)
+        username = nView?.findViewById<TextView>(R.id.username)
+        phone = nView?.findViewById<TextView>(R.id.phone)
+        photo = nView?.findViewById<ImageView>(R.id.photo)
+        home_menu = findViewById<ImageView>(R.id.home_menu)
+
+        home_menu?.setOnClickListener {
+            drawerLayout?.openDrawer(GravityCompat.START)
+        }
+
+        navigationView?.setNavigationItemSelectedListener(this)
+
+        var sharedPreferences =
+            this.getSharedPreferences("MySharedPref", Context.MODE_PRIVATE)
+        var st_phone = sharedPreferences.getString("Phone", "") ?: ""
+
+        databaseReference = FirebaseDatabase.getInstance().getReference("miners").child(st_phone)
+            .child("blockchain")
+
+        recyclerView = findViewById(R.id.recycler)
+        recyclerView.setHasFixedSize(true)
+        recyclerView.layoutManager = LinearLayoutManager(this)
+        adapterClass = BlockchainAdapter(
+            this,
+            ids,
+            miners,
+            no_of_transactionss,
+            total_sents,
+            mined_times
+        )
+        recyclerView.adapter = adapterClass
+
+        databaseReference.addValueEventListener(object : ValueEventListener {
+            override fun onDataChange(snapshot: DataSnapshot) {
+                ids.clear()
+                miners.clear()
+                no_of_transactionss.clear()
+                total_sents.clear()
+                mined_times.clear()
+
+                for (dataSnapshot in snapshot.children) {
+                    val id = dataSnapshot.child("Block_ID").value.toString()
+                    val miner = dataSnapshot.child("Miner").value.toString()
+                    val transaction = dataSnapshot.child("No_Of_Transactions").value.toString()
+                    val sent = dataSnapshot.child("Total_Amount").value.toString()
+                    val time = dataSnapshot.child("Mined_Time").value.toString()
+
+                    ids.add(id)
+                    miners.add(miner)
+                    no_of_transactionss.add(transaction)
+                    total_sents.add(sent)
+                    mined_times.add(time)
+                }
+                adapterClass.notifyDataSetChanged()
+            }
+
+            override fun onCancelled(error: DatabaseError) {}
+        })
+    }
+
+    override fun onNavigationItemSelected(item: MenuItem): Boolean {
+        when (item.itemId) {
+            R.id.block_queue -> {
+                val intent2 = Intent(this, BlockQueueActivity::class.java)
+                startActivity(intent2)
+            }
+            R.id.blockchain -> {
+                val intent2 = Intent(this, BlockchainActivity::class.java)
+                startActivity(intent2)
+            }
+            R.id.logout -> {
+                val intent = Intent(this, SignInActivity::class.java)
+                startActivity(intent)
+                this.finish()
+            }
+        }
+        return true
     }
 }

@@ -23,6 +23,7 @@ class TransactionDetailsActivity : AppCompatActivity() {
     private lateinit var feesTextView: TextView
     private lateinit var statusTextView: TextView
     private lateinit var transactionTimeTextView: TextView
+    private lateinit var blockNoTextView: TextView
 
     private lateinit var databaseReference: DatabaseReference
 
@@ -38,13 +39,13 @@ class TransactionDetailsActivity : AppCompatActivity() {
         feesTextView = findViewById(R.id.fees)
         statusTextView = findViewById(R.id.status)
         transactionTimeTextView = findViewById(R.id.transaction_time)
+        blockNoTextView = findViewById(R.id.block_no)
 
         st_id = intent.getStringExtra("transaction_id") ?: ""
 
         val sharedPreferences = getSharedPreferences("MySharedPref", Context.MODE_PRIVATE)
         val st_phone = sharedPreferences.getString("Phone", "") ?: ""
 
-        // Fetch and set data from Firebase
         fetchTransactionDetails(st_phone)
     }
 
@@ -60,8 +61,9 @@ class TransactionDetailsActivity : AppCompatActivity() {
                     val receiver = snapshot.child("Receiver").value.toString()
                     val amount = snapshot.child("Amount").value.toString()
                     val fees = snapshot.child("Fees").value.toString()
-                    val status = snapshot.child("Verify").value.toString()
+                    val status = snapshot.child("Status").value.toString()
                     val transactionTime = snapshot.child("Transaction_Time").value.toString()
+                    val blockNo = snapshot.child("Block_No").value.toString()
 
                     transactionIDTextView.text = transactionID
                     senderTextView.text = sender
@@ -70,11 +72,12 @@ class TransactionDetailsActivity : AppCompatActivity() {
                     feesTextView.text = fees
                     statusTextView.text = status
                     transactionTimeTextView.text = transactionTime
+                    blockNoTextView.text = blockNo
                 }
             }
 
             override fun onCancelled(error: DatabaseError) {
-                // Handle database error if needed
+
             }
         })
     }

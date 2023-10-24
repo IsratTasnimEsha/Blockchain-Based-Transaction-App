@@ -127,7 +127,6 @@ class AddTransactionFragment : Fragment(), NavigationView.OnNavigationItemSelect
                                         val refString = newTransactionRef.key
 
                                         newTransactionRef.child("Amount").setValue(st_amount)
-                                        newTransactionRef.child("Block_No").setValue(unrecognized)
                                         newTransactionRef.child("Fees").setValue(st_fees)
                                         newTransactionRef.child("Receiver").setValue(st_receiver)
                                         newTransactionRef.child("Sender").setValue(st_phone)
@@ -135,7 +134,7 @@ class AddTransactionFragment : Fragment(), NavigationView.OnNavigationItemSelect
                                             .setValue(refString.toString())
                                         newTransactionRef.child("Transaction_Time")
                                             .setValue(formattedDateTime.toString())
-                                        newTransactionRef.child("Verify").setValue(unrecognized)
+                                        newTransactionRef.child("Status").setValue(unrecognized)
                                     }
                                 }
                             }
@@ -171,7 +170,7 @@ class AddTransactionFragment : Fragment(), NavigationView.OnNavigationItemSelect
                 startActivity(intent2)
             }
             R.id.logout -> {
-                val intent = Intent(requireContext(), MainActivity::class.java)
+                val intent = Intent(requireContext(), SignInActivity::class.java)
                 startActivity(intent)
                 requireActivity().finish() // Finish the current activity
             }

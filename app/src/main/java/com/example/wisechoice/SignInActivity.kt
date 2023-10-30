@@ -42,7 +42,6 @@ class SignInActivity : AppCompatActivity() {
                         val str_pass = snapshot.child(st_phone).child("Password").value as? String
 
                         if (str_pass == st_pass) {
-                            // Save st_phone to SharedPreferences
                             val sharedPreferences = getSharedPreferences("MySharedPref", Context.MODE_PRIVATE)
                             val editor = sharedPreferences.edit()
                             editor.putString("Phone", st_phone)

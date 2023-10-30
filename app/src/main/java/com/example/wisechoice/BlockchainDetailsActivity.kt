@@ -45,7 +45,6 @@ class BlockchainDetailsAdapter(
         holder.receiver.text = "${receivers[position]}"
         holder.amount.text = "${amounts[position]}"
         holder.fees.text = "${feeses[position]}"
-        holder.verify.text = "${verifies[position]}"
         val idValue = ids[position]
 
         if(verifies[position] == "Unrecognized") {
@@ -78,7 +77,6 @@ class BlockchainDetailsAdapter(
         var receiver: TextView = itemView.findViewById(R.id.receiver)
         var amount: TextView = itemView.findViewById(R.id.amount)
         var fees: TextView = itemView.findViewById(R.id.fees)
-        var verify: TextView = itemView.findViewById(R.id.verify)
         var transaction_card = itemView.findViewById<CardView>(R.id.transaction_card)
     }
 }
@@ -133,7 +131,7 @@ class BlockchainDetailsActivity : AppCompatActivity() {
         fetchTransactionDetails(st_phone)
 
         databaseReference = FirebaseDatabase.getInstance().getReference("miners").child(st_phone)
-            .child("blockchain").child(st_id).child("transaction_details")
+            .child("main_blockchain").child(st_id).child("transaction_details")
 
         recyclerView = findViewById(R.id.recycler)
         recyclerView.setHasFixedSize(true)
@@ -187,7 +185,7 @@ class BlockchainDetailsActivity : AppCompatActivity() {
 
     private fun fetchTransactionDetails(st_phone: String) {
         databaseReference = FirebaseDatabase.getInstance().getReference("miners").child(st_phone)
-            .child("blockchain").child(st_id)
+            .child("main_blockchain").child(st_id)
 
         databaseReference.addListenerForSingleValueEvent(object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {

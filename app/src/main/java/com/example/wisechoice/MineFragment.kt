@@ -13,6 +13,7 @@ import android.widget.Button
 import androidx.annotation.RequiresApi
 import android.widget.ImageView
 import android.widget.TextView
+import android.widget.Toast
 import androidx.appcompat.app.ActionBarDrawerToggle
 import androidx.cardview.widget.CardView
 import androidx.core.view.GravityCompat
@@ -210,6 +211,8 @@ class MineFragment : Fragment(), NavigationView.OnNavigationItemSelectedListener
                 blockVal.child("Nonce").setValue(randomNotch)
                 blockVal.child("Miner").setValue(st_phone)
                 blockVal.child("Size").setValue(((hashedString.length - 5) * 4).toString())
+                blockVal.child("Previous_Hash")
+                    .setValue("000000000000000000000000000000000000000000000000000000000000000000")
 
                 val currentDateTime = LocalDateTime.now()
                 val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
@@ -220,30 +223,90 @@ class MineFragment : Fragment(), NavigationView.OnNavigationItemSelectedListener
                 val st_phone = sharedPreferences.getString("Phone", "") ?: ""
 
                 val minersRef = FirebaseDatabase.getInstance().getReference("miners")
-                val blockQueueRef = minersRef.child(st_phone).child("block_queue")
 
-                blockQueueRef.orderByKey().limitToLast(2).addListenerForSingleValueEvent(object : ValueEventListener {
-                    override fun onDataChange(dataSnapshot: DataSnapshot) {
-                        val blockList = dataSnapshot.children.toList()
+                minersRef.child(st_phone).child("blockchain")
+                    .addListenerForSingleValueEvent(object : ValueEventListener {
+                        override fun onDataChange(dataSnapshot: DataSnapshot) {
+                            for (childSnapshot in dataSnapshot.children) {
 
-                        if (blockList.size == 1) {
-                            val previousHash = "000000000000000000000000000000000000000000000000000000000000000000"
-
-                            blockList.firstOrNull()?.let { blockData ->
+                                val previousBlockID = childSnapshot.key
+                                val previousHash = childSnapshot.child("Block_Hash").value
                                 blockVal.child("Previous_Hash").setValue(previousHash)
+
+                                FirebaseDatabase.getInstance().getReference("miners")
+                                    .child(st_phone).child("blockchain").child(previousBlockID.toString())
+                                    .child("hasChild").setValue("True")
+
+                                val minersRef = FirebaseDatabase.getInstance().getReference("miners")
+
+                                minersRef.addListenerForSingleValueEvent(object : ValueEventListener {
+                                    override fun onDataChange(snapshot: DataSnapshot) {
+                                        for (childSnapshot in snapshot.children) {
+                                            val phone = childSnapshot.key
+
+                                            if (phone != null) {
+                                                FirebaseDatabase.getInstance()
+                                                    .getReference("miners")
+                                                    .child(phone).child("main_blockchain")
+                                                    .child(previousBlockID.toString())
+                                                    .setValue(dataSnapshot.child(previousBlockID.toString()).value)
+
+                                                for (grandChildSnapshot in childSnapshot
+                                                    .child("transaction_details").children) {
+
+                                                    val childKey = grandChildSnapshot.key
+
+                                                    Toast.makeText(requireContext(), childKey.toString(), Toast.LENGTH_SHORT).show()
+
+                                                    if (childKey != null) {
+                                                        FirebaseDatabase.getInstance().getReference("miners").child(phone)
+                                                            .child("transactions").child(childKey)
+                                                            .child("Status").setValue("Blocked")
+
+                                                        FirebaseDatabase.getInstance().getReference("miners").child(phone)
+                                                            .child("transactions").child(childKey)
+                                                            .child("Block_No").setValue(previousBlockID.toString())
+                                                    }
+                                                }
+
+                                                FirebaseDatabase.getInstance().getReference("miners")
+                                                    .child(phone).child("blockchain").removeValue()
+
+                                                FirebaseDatabase.getInstance().getReference("miners")
+                                                    .child(phone).child("block_queue")
+                                                    .addListenerForSingleValueEvent(object : ValueEventListener {
+                                                        override fun onDataChange(dataSnapshot: DataSnapshot) {
+                                                            for (childSnapshot in dataSnapshot.children) {
+                                                                val ID = childSnapshot.key
+                                                                val blockHash = childSnapshot.child("Block_Hash").value
+
+                                                                if(blockHash == previousHash) {
+                                                                    FirebaseDatabase.getInstance().getReference("miners")
+                                                                        .child(phone).child("block_queue")
+                                                                        .child(ID.toString()).removeValue()
+                                                                }
+                                                            }
+                                                        }
+
+                                                        override fun onCancelled(error: DatabaseError) {
+
+                                                        }
+                                                    })
+                                            }
+                                        }
+                                    }
+
+                                    override fun onCancelled(error: DatabaseError) {
+
+                                    }
+                                })
                             }
-                        } else if (blockList.size >= 2) {
-                            val previousBlock = blockList[blockList.size - 2]
-                            val previousHash = previousBlock.child("Block_Hash").value.toString()
-
-                            blockVal.child("Previous_Hash").setValue(previousHash)
                         }
-                    }
 
-                    override fun onCancelled(databaseError: DatabaseError) {
+                        override fun onCancelled(error: DatabaseError) {
 
-                    }
-                })
+                        }
+                    })
 
                 val blockRef = blockVal.child("transaction_details")
                 var noOfTransactions = 0

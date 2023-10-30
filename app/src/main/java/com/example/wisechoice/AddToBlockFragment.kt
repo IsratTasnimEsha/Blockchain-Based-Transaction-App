@@ -2,7 +2,6 @@ package com.example.wisechoice
 
 import android.content.Context
 import android.content.Intent
-import android.content.SharedPreferences
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.MenuItem
@@ -10,6 +9,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
 import android.widget.ImageView
+import android.widget.PopupMenu
 import android.widget.TextView
 import androidx.appcompat.app.ActionBarDrawerToggle
 import androidx.cardview.widget.CardView
@@ -190,6 +190,8 @@ class TempBlockAdapter(
 class AddToBlockFragment : Fragment(), NavigationView.OnNavigationItemSelectedListener {
     private lateinit var recyclerView: RecyclerView
     private lateinit var adapterClass: TempBlockAdapter
+    private lateinit var statusText: TextView
+    private lateinit var statusCard: CardView
 
     private lateinit var databaseReference: DatabaseReference
 
@@ -220,7 +222,7 @@ class AddToBlockFragment : Fragment(), NavigationView.OnNavigationItemSelectedLi
         super.onViewCreated(view, savedInstanceState)
 
         drawerLayout = view.findViewById<DrawerLayout>(R.id.drawer)
-        // Use the activity context to initialize ActionBarDrawerToggle
+
         val actionBarDrawerToggle = ActionBarDrawerToggle(
             requireActivity(), drawerLayout,
             R.string.navigation_drawer_open, R.string.navigation_drawer_close
@@ -262,6 +264,65 @@ class AddToBlockFragment : Fragment(), NavigationView.OnNavigationItemSelectedLi
         )
         recyclerView.adapter = adapterClass
 
+        statusSelected("Unrecognized", "Verified", "Unrecognized",
+            "Verified", "Unrecognized", "Verified")
+
+        statusText = view.findViewById(R.id.status_text)
+        statusCard = view.findViewById(R.id.status_card)
+
+        statusCard.setOnClickListener { showPopupMenu(statusCard) }
+    }
+
+    private fun showPopupMenu(statusCard: CardView?) {
+        val popupMenu = PopupMenu(requireContext(), view)
+        popupMenu.inflate(R.menu.status_options)
+
+        popupMenu.setOnMenuItemClickListener { item ->
+            when (item.itemId) {
+                R.id.unblocked -> {
+                    statusText.text = "Unblocked"
+                    statusSelected("Unrecognized", "Verified", "Unrecognized",
+                        "Verified", "Unrecognized", "Verified")
+                    true
+                }
+                R.id.not_verified -> {
+                    statusText.text = "Not Verified"
+                    statusSelected("Not Verified", "Not Verified", "Not Verified",
+                        "Not Verified", "Not Verified", "Not Verified")
+                    true
+                }
+                R.id.temporary_blocked -> {
+                    statusText.text = "Temporary Blocked"
+                    statusSelected("Temporary Blocked", "Temporary Blocked", "Temporary Blocked",
+                        "Temporary Blocked", "Temporary Blocked", "Temporary Blocked")
+                    true
+                }
+                R.id.processing -> {
+                    statusText.text = "Processing..."
+                    statusSelected("Processing...", "Processing...", "Processing...",
+                        "Processing...", "Processing...", "Processing...")
+                    true
+                }
+                R.id.blocked -> {
+                    statusText.text = "Blocked"
+                    statusSelected("Blocked", "Blocked", "Blocked",
+                        "Blocked", "Blocked", "Blocked")
+                    true
+                }
+                R.id.all -> {
+                    statusText.text = "All Transactions"
+                    statusSelected("Unrecognized", "Verified", "Not Verified",
+                        "Temporary Blocked", "Processing...", "Blocked")
+                    true
+                }
+                else -> false
+            }
+        }
+
+        popupMenu.show()
+    }
+
+    fun statusSelected(status1: String, status2: String, status3: String, status4: String, status5: String, status6: String) {
         databaseReference.addValueEventListener(object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
                 senders.clear()
@@ -273,21 +334,27 @@ class AddToBlockFragment : Fragment(), NavigationView.OnNavigationItemSelectedLi
                 transaction_times.clear()
 
                 for (dataSnapshot in snapshot.children) {
-                    val sender = dataSnapshot.child("Sender").value.toString()
-                    val receiver = dataSnapshot.child("Receiver").value.toString()
-                    val amount = dataSnapshot.child("Amount").value.toString()
-                    val fees = dataSnapshot.child("Fees").value.toString()
                     val verify = dataSnapshot.child("Status").value.toString()
-                    val transaction_time = dataSnapshot.child("Transaction_Time").value.toString()
-                    val id = dataSnapshot.child("Transaction_ID").value.toString()
 
-                    senders.add(sender)
-                    receivers.add(receiver)
-                    amounts.add(amount)
-                    feeses.add(fees)
-                    verifies.add(verify)
-                    ids.add(id)
-                    transaction_times.add(transaction_time)
+                    if(verify == status1 || verify == status2 || verify == status3 || verify == status4
+                        || verify == status5 || verify == status6) {
+
+                        val sender = dataSnapshot.child("Sender").value.toString()
+                        val receiver = dataSnapshot.child("Receiver").value.toString()
+                        val amount = dataSnapshot.child("Amount").value.toString()
+                        val fees = dataSnapshot.child("Fees").value.toString()
+                        val transaction_time =
+                            dataSnapshot.child("Transaction_Time").value.toString()
+                        val id = dataSnapshot.child("Transaction_ID").value.toString()
+
+                        senders.add(sender)
+                        receivers.add(receiver)
+                        amounts.add(amount)
+                        feeses.add(fees)
+                        verifies.add(verify)
+                        ids.add(id)
+                        transaction_times.add(transaction_time)
+                    }
                 }
                 adapterClass.notifyDataSetChanged()
             }
@@ -309,7 +376,7 @@ class AddToBlockFragment : Fragment(), NavigationView.OnNavigationItemSelectedLi
             R.id.logout -> {
                 val intent = Intent(requireContext(), SignInActivity::class.java)
                 startActivity(intent)
-                requireActivity().finish() // Finish the current activity
+                requireActivity().finish()
             }
         }
         return true

@@ -254,13 +254,12 @@ class BlockDetailsActivity : AppCompatActivity() {
                                             if (childKey != null) {
                                                 FirebaseDatabase.getInstance().getReference("miners").child(st_phone)
                                                     .child("transactions").child(childKey)
-                                                    .child("Status").setValue("Blocked")
-
-                                                FirebaseDatabase.getInstance().getReference("miners").child(st_phone)
-                                                    .child("transactions").child(childKey)
-                                                    .child("Block_No").setValue(st_id)
+                                                    .child("Status").setValue("Processing...")
                                             }
                                         }
+
+                                        FirebaseDatabase.getInstance().getReference("miners").child(st_phone)
+                                            .child("block_queue").removeValue()
                                     }
                                 }
 

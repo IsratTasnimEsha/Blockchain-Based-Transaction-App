@@ -18,6 +18,7 @@ class TransactionDetailsActivity : AppCompatActivity() {
     private lateinit var st_id: String
     private lateinit var transactionIDTextView: TextView
     private lateinit var senderTextView: TextView
+    private lateinit var signatureTextView: TextView
     private lateinit var receiverTextView: TextView
     private lateinit var amountTextView: TextView
     private lateinit var feesTextView: TextView
@@ -33,6 +34,7 @@ class TransactionDetailsActivity : AppCompatActivity() {
 
         transactionIDTextView = findViewById(R.id.transaction_id)
         senderTextView = findViewById(R.id.sender)
+        signatureTextView = findViewById(R.id.signature)
         receiverTextView = findViewById(R.id.receiver)
         amountTextView = findViewById(R.id.amount)
         feesTextView = findViewById(R.id.fees)
@@ -58,6 +60,7 @@ class TransactionDetailsActivity : AppCompatActivity() {
                     val transactionID = snapshot.child("Transaction_ID").value.toString()
                     val sender = snapshot.child("Sender").value.toString()
                     val receiver = snapshot.child("Receiver").value.toString()
+                    val signature = snapshot.child("Signature").value.toString()
                     val amount = snapshot.child("Amount").value.toString()
                     val fees = snapshot.child("Fees").value.toString()
                     val status = snapshot.child("Status").value.toString()
@@ -66,6 +69,7 @@ class TransactionDetailsActivity : AppCompatActivity() {
 
                     transactionIDTextView.text = transactionID
                     senderTextView.text = sender
+                    signatureTextView.text = signature
                     receiverTextView.text = receiver
                     amountTextView.text = amount
                     feesTextView.text = fees

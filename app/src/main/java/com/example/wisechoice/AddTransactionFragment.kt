@@ -1,7 +1,5 @@
 package com.example.wisechoice
 
-import java.time.LocalDateTime
-import java.time.format.DateTimeFormatter
 import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
@@ -13,13 +11,8 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
 import android.widget.EditText
-import android.widget.ImageView
-import android.widget.TextView
 import android.widget.Toast
 import androidx.annotation.RequiresApi
-import androidx.appcompat.app.ActionBarDrawerToggle
-import androidx.core.view.GravityCompat
-import androidx.drawerlayout.widget.DrawerLayout
 import androidx.fragment.app.Fragment
 import com.google.android.material.navigation.NavigationView
 import com.google.firebase.database.DataSnapshot
@@ -27,152 +20,167 @@ import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 
-class AddTransactionFragment : Fragment(), NavigationView.OnNavigationItemSelectedListener{
-    private lateinit var receiver: EditText
-    private lateinit var amount: EditText
-    private lateinit var fees: EditText
+class AddTransactionFragment : Fragment(), NavigationView.OnNavigationItemSelectedListener {
+
+    private lateinit var receiverField: EditText
+    private lateinit var amountField: EditText
+    private lateinit var feesField: EditText
     private lateinit var transact: Button
-
+    private lateinit var signatureField: EditText
+    private lateinit var signatureButton: Button
     private lateinit var st_phone: String
-
     private lateinit var sharedPreferences: SharedPreferences
     private lateinit var databaseReference: DatabaseReference
 
-    var drawerLayout: DrawerLayout? = null
-    var navigationView: NavigationView? = null
-    var nView: View? = null
-
-    var username: TextView? = null
-    var phone: TextView? = null
-    var photo: ImageView? = null
-    var home_menu: ImageView? = null
-
+    @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        return inflater.inflate(R.layout.fragment_add_transaction, container, false)
-    }
+        val view = inflater.inflate(R.layout.fragment_add_transaction, container, false)
 
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
-
-        drawerLayout = view.findViewById<DrawerLayout>(R.id.drawer)
-        // Use the activity context to initialize ActionBarDrawerToggle
-        val actionBarDrawerToggle = ActionBarDrawerToggle(
-            requireActivity(), drawerLayout,
-            R.string.navigation_drawer_open, R.string.navigation_drawer_close
-        )
-        actionBarDrawerToggle.syncState()
-
-        navigationView = view.findViewById<NavigationView>(R.id.navigation)
-        nView = navigationView?.getHeaderView(0)
-        username = nView?.findViewById<TextView>(R.id.username)
-        phone = nView?.findViewById<TextView>(R.id.phone)
-        photo = nView?.findViewById<ImageView>(R.id.photo)
-        home_menu = view.findViewById<ImageView>(R.id.home_menu)
-
-        home_menu?.setOnClickListener {
-            drawerLayout?.openDrawer(GravityCompat.START)
-        }
-
-        navigationView?.setNavigationItemSelectedListener(this)
+        receiverField = view.findViewById(R.id.receiver)
+        amountField = view.findViewById(R.id.amount)
+        feesField = view.findViewById(R.id.fees)
+        transact = view.findViewById(R.id.transact)
+        signatureField = view.findViewById(R.id.signatureField)
+        signatureButton = view.findViewById(R.id.signatureButton)
 
         databaseReference = FirebaseDatabase.getInstance().getReference()
 
-        receiver = view.findViewById(R.id.receiver)
-        amount = view.findViewById(R.id.amount)
-        fees = view.findViewById(R.id.fees)
-        transact = view.findViewById(R.id.transact)
-
-        sharedPreferences = requireContext().getSharedPreferences("MySharedPref", Context.MODE_PRIVATE)
-
+        sharedPreferences = requireActivity().getSharedPreferences("MySharedPref", Context.MODE_PRIVATE)
         st_phone = sharedPreferences.getString("Phone", "").toString()
 
-        transact.setOnClickListener(object : View.OnClickListener {
-            @RequiresApi(Build.VERSION_CODES.O)
-            override fun onClick(view: View) {
-                val st_receiver = receiver.text.toString()
-                val st_amount = amount.text.toString()
-                val st_fees = fees.text.toString()
-                val unrecognized: String = "Unrecognized"
+        signatureButton.setOnClickListener {
+            fetchSignatureFromFirebase()
+        }
 
-                val currentDateTime = LocalDateTime.now()
-                val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
-                val formattedDateTime = currentDateTime.format(formatter)
+        transact.setOnClickListener {
+            performTransaction()
+        }
 
-                if (st_receiver.isEmpty()) {
-                    receiver.error = "Please Enter The Phone Number."
-                } else if (st_amount.isEmpty()) {
-                    amount.error = "Please Enter The Amount."
-                } else if (st_fees.isEmpty()) {
-                    fees.error = "Please Enter The Phone Number."
-                } else {
-                    val minersRef = databaseReference.child("miners")
+        return view
+    }
 
-                    val transactionKey = databaseReference.child("transactions").push().key
-
-                    minersRef.addListenerForSingleValueEvent(object : ValueEventListener {
-                        override fun onDataChange(snapshot: DataSnapshot) {
-                            for (childSnapshot in snapshot.children) {
-                                val phone = childSnapshot.key
-
-                                if (phone != null) {
-                                    val phoneRef = minersRef.child(phone)
-
-                                    if (transactionKey != null) {
-                                        val newTransactionRef =
-                                            phoneRef.child("transactions").child(transactionKey)
-                                        val refString = newTransactionRef.key
-
-                                        newTransactionRef.child("Amount").setValue(st_amount)
-                                        newTransactionRef.child("Fees").setValue(st_fees)
-                                        newTransactionRef.child("Receiver").setValue(st_receiver)
-                                        newTransactionRef.child("Sender").setValue(st_phone)
-                                        newTransactionRef.child("Transaction_ID")
-                                            .setValue(refString.toString())
-                                        newTransactionRef.child("Transaction_Time")
-                                            .setValue(formattedDateTime.toString())
-                                        newTransactionRef.child("Status").setValue(unrecognized)
-                                    }
-                                }
-                            }
-
-                            Toast.makeText(
-                                requireContext(),
-                                "The Transaction Has Occurred.",
-                                Toast.LENGTH_SHORT
-                            ).show()
-
-                            receiver.text.clear()
-                            amount.text.clear()
-                            fees.text.clear()
-                        }
-
-                        override fun onCancelled(error: DatabaseError) {
-                            // Handle database error if needed
-                        }
-                    })
+    private fun fetchSignatureFromFirebase() {
+        databaseReference.child("miners").child(st_phone)
+            .addListenerForSingleValueEvent(object : ValueEventListener {
+                override fun onDataChange(snapshot: DataSnapshot) {
+                    if (snapshot.child("Signature").exists()) {
+                        val signature = snapshot.child("Signature").value.toString()
+                        signatureField.setText(signature)
+                    } else {
+                        Toast.makeText(requireContext(), "No signature found for the user.", Toast.LENGTH_SHORT).show()
+                    }
                 }
+
+                override fun onCancelled(error: DatabaseError) {
+                    // Handle database error if needed
+                }
+            })
+    }
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    private fun performTransaction() {
+        val st_receiver = receiverField.text.toString()
+        val st_amount = amountField.text.toString().toDoubleOrNull() ?: 0.0
+        val st_fees = feesField.text.toString().toDoubleOrNull() ?: 0.0
+        val st_signature = signatureField.text.toString()
+        val unrecognized: String = "Unrecognized"
+        val currentDateTime = LocalDateTime.now()
+        val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
+        val formattedDateTime = currentDateTime.format(formatter)
+
+        if (st_receiver.isEmpty() || st_amount == 0.0 || st_fees == 0.0 || st_signature.isEmpty()) {
+            Toast.makeText(requireContext(), "Please fill in all fields.", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        val minersRef = databaseReference.child("miners")
+
+        minersRef.addListenerForSingleValueEvent(object : ValueEventListener {
+            override fun onDataChange(snapshot: DataSnapshot) {
+                var receiverExists = false
+                var senderBalance = 0.0
+
+                for (childSnapshot in snapshot.children) {
+                    val phone = childSnapshot.key
+                    if (phone == st_receiver) {
+                        receiverExists = true
+                    }
+                    if (phone == st_phone) {
+                        senderBalance = childSnapshot.child("Balance").value.toString().toDoubleOrNull() ?: 0.0
+                    }
+                }
+
+                if (!receiverExists) {
+                    Toast.makeText(requireContext(), "Receiver does not exist.", Toast.LENGTH_SHORT).show()
+                    return
+                }
+
+                if (st_amount + st_fees > senderBalance) {
+                    Toast.makeText(requireContext(), "Insufficient balance to perform the transaction.", Toast.LENGTH_SHORT).show()
+                    return
+                }
+
+                // Transaction is ready to be performed...
+                val newBalance = senderBalance - (st_amount + st_fees)
+
+                // Proceed with updating the sender's balance and the transaction details...
+                updateSenderBalance(newBalance, st_amount, st_fees, st_receiver, st_signature,formattedDateTime)
+            }
+
+            override fun onCancelled(error: DatabaseError) {
+                // Handle database error if needed
             }
         })
+    }
+
+    private fun updateSenderBalance(newBalance: Double, amount: Double, fees: Double, receiver: String, signature: String ,formattedDateTime:String) {
+        val senderRef = databaseReference.child("miners").child(st_phone)
+        senderRef.child("Balance").setValue(newBalance)
+
+        val transactionKey = databaseReference.child("transactions").push().key
+        val newTransactionRef = senderRef.child("transactions").child(transactionKey!!)
+        val refString = newTransactionRef.key
+
+        newTransactionRef.apply {
+            child("Amount").setValue(amount)
+            child("Fees").setValue(fees)
+            child("Receiver").setValue(receiver)
+            child("Sender").setValue(st_phone)
+            child("Signature").setValue(signature)
+            child("Transaction_ID").setValue(refString.toString())
+            newTransactionRef.child("Transaction_Time")
+                .setValue(formattedDateTime.toString())
+            child("Status").setValue("Unrecognized")
+        }
+
+        Toast.makeText(requireContext(), "The Transaction Has Occurred.", Toast.LENGTH_SHORT).show()
+
+        receiverField.text.clear()
+        amountField.text.clear()
+        feesField.text.clear()
+        signatureField.text.clear()
     }
 
     override fun onNavigationItemSelected(item: MenuItem): Boolean {
         when (item.itemId) {
             R.id.block_queue -> {
-                val intent2 = Intent(requireContext(), BlockQueueActivity::class.java)
-                startActivity(intent2)
+                val intent = Intent(requireContext(), BlockQueueActivity::class.java)
+                startActivity(intent)
             }
             R.id.blockchain -> {
-                val intent2 = Intent(requireContext(), BlockchainActivity::class.java)
-                startActivity(intent2)
+                val intent = Intent(requireContext(), BlockchainActivity::class.java)
+                startActivity(intent)
             }
             R.id.logout -> {
                 val intent = Intent(requireContext(), SignInActivity::class.java)
                 startActivity(intent)
-                requireActivity().finish() // Finish the current activity
+                requireActivity().finish()
             }
         }
         return true

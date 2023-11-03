@@ -27,8 +27,7 @@
         <androidx.cardview.widget.CardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="50dp"
-            android:layout_marginBottom="10dp"
+            android:layout_marginBottom="5dp"
             app:cardCornerRadius="8dp">
 
             <EditText
@@ -48,7 +47,7 @@
         <androidx.cardview.widget.CardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="10dp"
+            android:layout_marginBottom="5dp"
             app:cardCornerRadius="8dp">
 
             <EditText
@@ -68,7 +67,7 @@
         <androidx.cardview.widget.CardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="10dp"
+            android:layout_marginBottom="5dp"
             app:cardCornerRadius="8dp">
 
             <EditText
@@ -89,6 +88,41 @@
         <androidx.cardview.widget.CardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_marginBottom="10dp"
+            app:cardCornerRadius="8dp">
+
+            <EditText
+                android:id="@+id/signatureField"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@color/transparent"
+                android:drawableLeft="@drawable/baseline_attach_money_24"
+                android:drawablePadding="5dp"
+                android:ems="10"
+                android:hint="Signature"
+                android:inputType="number"
+                android:minHeight="48dp"
+                android:enabled="false"
+                android:padding="5dp" />
+
+        </androidx.cardview.widget.CardView>
+        <androidx.cardview.widget.CardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:cardCornerRadius="8dp"
+            android:layout_marginBottom="10dp">
+
+            <Button
+                android:id="@+id/signatureButton"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@color/dark_blue"
+                android:text="ADD SIGNATURE"
+                android:textColor="@color/white" />
+        </androidx.cardview.widget.CardView>
+        <androidx.cardview.widget.CardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
             app:cardCornerRadius="8dp">
 
             <Button
@@ -96,7 +130,8 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:background="@color/dark_blue"
-                android:text="Transact"
+
+                android:text="TRANSACT"
                 android:textColor="@color/white" />
         </androidx.cardview.widget.CardView>
     </LinearLayout>

@@ -54,46 +54,8 @@ class TempBlockAdapter(
         holder.verify.text = "${verifies[position]}"
         val idValue = ids[position]
 
-        val sharedPreferences =
-            context.getSharedPreferences("MySharedPref", Context.MODE_PRIVATE)
-        val st_phone = sharedPreferences.getString("Phone", "") ?: ""
-
-        FirebaseDatabase.getInstance()
-            .getReference("miners")
-            .child(st_phone)
-            .child("main_blockchain")
-            .addListenerForSingleValueEvent(object : ValueEventListener {
-                override fun onDataChange(snapshot: DataSnapshot) {
-                    for (childSnapshot in snapshot.children) {
-                        val blockKey = childSnapshot.key
-                        val blockTransactionDetails = childSnapshot.child("transaction_details")
-
-                        blockTransactionDetails.children.forEach { transactionSnapshot ->
-                            val transactionKey = transactionSnapshot.key
-
-                            FirebaseDatabase.getInstance()
-                                .getReference("miners")
-                                .child(st_phone)
-                                .child("transactions")
-                                .child(transactionKey.toString())
-                                .child("Status")
-                                .setValue("Blocked")
-
-                            FirebaseDatabase.getInstance()
-                                .getReference("miners")
-                                .child(st_phone)
-                                .child("transactions")
-                                .child(transactionKey.toString())
-                                .child("Block_No")
-                                .setValue(blockKey.toString())
-                        }
-                    }
-                }
-
-                override fun onCancelled(error: DatabaseError) {
-                    // Handle onCancelled
-                }
-            })
+        checkBlockchain("main_blockchain", "Blocked")
+        checkBlockchain("blockchain", "Temporary Blocked")
 
         if(verifies[position] == "Unrecognized") {
             holder.sender.setTextColor(ContextCompat.getColor(context, R.color.olive))
@@ -131,19 +93,7 @@ class TempBlockAdapter(
             holder.transaction_card.setBackgroundColor(ContextCompat.getColor(context, R.color.dark_green ))
         }
 
-        else if(verifies[position] == "Temporary Blocked") {
-            holder.sender.setTextColor(ContextCompat.getColor(context, R.color.olive))
-            holder.receiver.setTextColor(ContextCompat.getColor(context, R.color.olive))
-            holder.amount.setTextColor(ContextCompat.getColor(context, R.color.olive))
-            holder.fees.setTextColor(ContextCompat.getColor(context, R.color.olive))
-            holder.verify.setTextColor(ContextCompat.getColor(context, R.color.olive))
-
-            holder.verify_button.isEnabled = false
-            holder.verify_button.text = "Wait"
-            holder.transaction_card.setBackgroundColor(ContextCompat.getColor(context, R.color.yellow))
-        }
-
-        else if(verifies[position] == "Processing...") {
+        else if(verifies[position] == "In Processing...") {
             holder.sender.setTextColor(ContextCompat.getColor(context, R.color.olive))
             holder.receiver.setTextColor(ContextCompat.getColor(context, R.color.olive))
             holder.amount.setTextColor(ContextCompat.getColor(context, R.color.olive))
@@ -153,6 +103,18 @@ class TempBlockAdapter(
             holder.verify_button.isEnabled = false
             holder.verify_button.text = "Wait"
             holder.transaction_card.setBackgroundColor(ContextCompat.getColor(context, R.color.orange))
+        }
+
+        else if(verifies[position] == "Temporary Blocked") {
+            holder.sender.setTextColor(ContextCompat.getColor(context, R.color.white))
+            holder.receiver.setTextColor(ContextCompat.getColor(context, R.color.white))
+            holder.amount.setTextColor(ContextCompat.getColor(context, R.color.white))
+            holder.fees.setTextColor(ContextCompat.getColor(context, R.color.white))
+            holder.verify.setTextColor(ContextCompat.getColor(context, R.color.white))
+
+            holder.verify_button.isEnabled = false
+            holder.verify_button.text = "Wait"
+            holder.transaction_card.setBackgroundColor(ContextCompat.getColor(context, R.color.ash))
         }
 
         else if(verifies[position] == "Blocked") {
@@ -186,10 +148,10 @@ class TempBlockAdapter(
             else if(holder.verify.text == "Verified") {
                 val newTransactionRef = databaseReference.child("miners").child(st_phone)
                     .child("transactions").child(idValue)
-                newTransactionRef.child("Status").setValue("Temporary Blocked")
+                newTransactionRef.child("Status").setValue("In Processing...")
 
                 holder.verify.text = ""
-                holder.verify_button.text = "Temporary Blocked"
+                holder.verify_button.text = "In Processing..."
                 holder.verify_button.isEnabled = false
                 holder.transaction_card.setBackgroundColor(ContextCompat.getColor(context, R.color.yellow))
 
@@ -211,6 +173,54 @@ class TempBlockAdapter(
             intent.putExtra("transaction_id", idValue)
             context.startActivity(intent)
         }
+    }
+
+    private fun checkBlockchain(path: String, status: String) {
+        val sharedPreferences =
+            context.getSharedPreferences("MySharedPref", Context.MODE_PRIVATE)
+        val st_phone = sharedPreferences.getString("Phone", "") ?: ""
+
+        FirebaseDatabase.getInstance()
+            .getReference("miners")
+            .child(st_phone)
+            .child(path)
+            .addListenerForSingleValueEvent(object : ValueEventListener {
+                override fun onDataChange(snapshot: DataSnapshot) {
+                    for (childSnapshot in snapshot.children) {
+                        val blockKey = childSnapshot.key
+                        val blockTransactionDetails = childSnapshot.child("transaction_details")
+
+                        blockTransactionDetails.children.forEach { transactionSnapshot ->
+                            val transactionKey = transactionSnapshot.key
+
+                            val st_status = transactionSnapshot.child("Status").getValue().toString()
+
+                            if(st_status != "Blocked") {
+
+                                FirebaseDatabase.getInstance()
+                                    .getReference("miners")
+                                    .child(st_phone)
+                                    .child("transactions")
+                                    .child(transactionKey.toString())
+                                    .child("Status")
+                                    .setValue(status)
+
+                                FirebaseDatabase.getInstance()
+                                    .getReference("miners")
+                                    .child(st_phone)
+                                    .child("transactions")
+                                    .child(transactionKey.toString())
+                                    .child("Block_No")
+                                    .setValue(blockKey.toString())
+                            }
+                        }
+                    }
+                }
+
+                override fun onCancelled(error: DatabaseError) {
+
+                }
+            })
     }
 
     override fun getItemCount(): Int {
@@ -305,8 +315,11 @@ class AddToBlockFragment : Fragment(), NavigationView.OnNavigationItemSelectedLi
         )
         recyclerView.adapter = adapterClass
 
-        statusSelected("Unrecognized", "Verified", "Unrecognized",
-            "Verified", "Unrecognized", "Verified")
+        //statusSelected("Unrecognized", "Verified", "Unrecognized",
+        //    "Verified", "Unrecognized", "Verified")
+
+        statusSelected("Unrecognized", "Verified", "Not Verified",
+            "In Processing...", "Temporary Blocked", "Blocked")
 
         statusText = view.findViewById(R.id.status_text)
         statusCard = view.findViewById(R.id.status_card)
@@ -332,16 +345,16 @@ class AddToBlockFragment : Fragment(), NavigationView.OnNavigationItemSelectedLi
                         "Not Verified", "Not Verified", "Not Verified")
                     true
                 }
+                R.id.processing -> {
+                    statusText.text = "In Processing..."
+                    statusSelected("In Processing...", "In Processing...", "In Processing...",
+                        "In Processing...", "In Processing...", "In Processing...")
+                    true
+                }
                 R.id.temporary_blocked -> {
                     statusText.text = "Temporary Blocked"
                     statusSelected("Temporary Blocked", "Temporary Blocked", "Temporary Blocked",
                         "Temporary Blocked", "Temporary Blocked", "Temporary Blocked")
-                    true
-                }
-                R.id.processing -> {
-                    statusText.text = "Processing..."
-                    statusSelected("Processing...", "Processing...", "Processing...",
-                        "Processing...", "Processing...", "Processing...")
                     true
                 }
                 R.id.blocked -> {
@@ -353,7 +366,7 @@ class AddToBlockFragment : Fragment(), NavigationView.OnNavigationItemSelectedLi
                 R.id.all -> {
                     statusText.text = "All Transactions"
                     statusSelected("Unrecognized", "Verified", "Not Verified",
-                        "Temporary Blocked", "Processing...", "Blocked")
+                        "In Processing...", "Temporary Blocked","Blocked")
                     true
                 }
                 else -> false

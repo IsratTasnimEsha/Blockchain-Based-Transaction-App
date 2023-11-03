@@ -54,6 +54,7 @@ class BlockchainAdapter(
             val intent = Intent(context, BlockchainDetailsActivity::class.java)
 
             intent.putExtra("block_id", idValue)
+            intent.putExtra("path", "main_blockchain")
             context.startActivity(intent)
         }
     }

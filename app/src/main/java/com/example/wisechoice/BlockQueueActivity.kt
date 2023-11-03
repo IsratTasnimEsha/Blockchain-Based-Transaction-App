@@ -24,6 +24,8 @@ import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
+import com.google.firebase.database.ktx.getValue
+import com.google.firebase.database.ktx.values
 
 class BlockQueueAdapter(
     private val context: Context,
@@ -114,6 +116,12 @@ class BlockQueueActivity : AppCompatActivity() , NavigationView.OnNavigationItem
         photo = nView?.findViewById<ImageView>(R.id.photo)
         home_menu = findViewById<ImageView>(R.id.home_menu)
 
+        val b_miner = findViewById<TextView>(R.id.b_miner)
+        val b_no = findViewById<TextView>(R.id.b_no)
+        val b_sent = findViewById<TextView>(R.id.b_sent)
+        val b_time = findViewById<TextView>(R.id.b_time)
+        val b_block_card = findViewById<CardView>(R.id.b_block_card)
+
         home_menu?.setOnClickListener {
             drawerLayout?.openDrawer(GravityCompat.START)
         }
@@ -123,6 +131,90 @@ class BlockQueueActivity : AppCompatActivity() , NavigationView.OnNavigationItem
         var sharedPreferences =
             this.getSharedPreferences("MySharedPref", Context.MODE_PRIVATE)
         var st_phone = sharedPreferences.getString("Phone", "") ?: ""
+
+        val reference = FirebaseDatabase.getInstance()
+            .getReference("miners")
+            .child(st_phone)
+            .child("blockchain")
+
+        reference.addListenerForSingleValueEvent(object : ValueEventListener {
+            override fun onDataChange(snapshot: DataSnapshot) {
+                for (childSnapshot in snapshot.children) {
+                    var id = childSnapshot.key
+
+                    b_miner.text = snapshot.child(id.toString()).child("Miner").getValue(String::class.java)
+                    b_no.text = snapshot.child(id.toString()).child("No_Of_Transactions").getValue().toString()
+                    b_sent .text = snapshot.child(id.toString()).child("Total_Amount").getValue().toString()
+                    b_time.text = snapshot.child(id.toString()).child("Mined_Time").getValue(String::class.java)
+
+                    b_block_card.setOnClickListener {
+                        val intent = Intent(this@BlockQueueActivity, BlockchainDetailsActivity::class.java)
+
+                        intent.putExtra("block_id", id.toString())
+                        intent.putExtra("path", "blockchain")
+                        this@BlockQueueActivity.startActivity(intent)
+                    }
+                }
+            }
+
+            override fun onCancelled(error: DatabaseError) {
+
+            }
+        })
+
+        FirebaseDatabase.getInstance()
+            .getReference("miners")
+            .child(st_phone)
+            .child("main_blockchain")
+            .addListenerForSingleValueEvent(object : ValueEventListener {
+                override fun onDataChange(snapshot: DataSnapshot) {
+                    for (childSnapshot in snapshot.children) {
+                        val blockTransactionDetails = childSnapshot.child("transaction_details")
+
+                        blockTransactionDetails.children.forEach { transactionSnapshot ->
+                            val transactionKey = transactionSnapshot.key
+
+                            FirebaseDatabase.getInstance()
+                                .getReference("miners")
+                                .child(st_phone)
+                                .child("block_queue")
+                                .addListenerForSingleValueEvent(object : ValueEventListener {
+                                    override fun onDataChange(snapshot: DataSnapshot) {
+                                        for (childSnapshot in snapshot.children) {
+                                            childSnapshot.child("transaction_details")
+                                                .child(transactionKey.toString()).ref.removeValue()
+                                        }
+                                    }
+
+                                    override fun onCancelled(error: DatabaseError) {
+
+                                    }
+                                })
+
+                            FirebaseDatabase.getInstance()
+                                .getReference("miners")
+                                .child(st_phone)
+                                .child("blockchain")
+                                .addListenerForSingleValueEvent(object : ValueEventListener {
+                                    override fun onDataChange(snapshot: DataSnapshot) {
+                                        for (childSnapshot in snapshot.children) {
+                                            childSnapshot.child("transaction_details")
+                                                .child(transactionKey.toString()).ref.removeValue()
+                                        }
+                                    }
+
+                                    override fun onCancelled(error: DatabaseError) {
+
+                                    }
+                                })
+                        }
+                    }
+                }
+
+                override fun onCancelled(error: DatabaseError) {
+
+                }
+            })
 
         databaseReference = FirebaseDatabase.getInstance().getReference("miners").child(st_phone)
             .child("block_queue")

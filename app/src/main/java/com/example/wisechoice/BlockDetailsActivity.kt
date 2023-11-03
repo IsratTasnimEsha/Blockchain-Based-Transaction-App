@@ -246,17 +246,10 @@ class BlockDetailsActivity : AppCompatActivity() {
                             .addListenerForSingleValueEvent(object : ValueEventListener {
                                 override fun onDataChange(snapshot: DataSnapshot) {
                                     if (snapshot.exists()) {
+                                        FirebaseDatabase.getInstance().getReference("miners").child(st_phone)
+                                            .child("blockchain").child(st_id).removeValue()
+
                                         blockchainReference.setValue(snapshot.value)
-
-                                        for (childSnapshot in snapshot.child("transaction_details").children) {
-                                            val childKey = childSnapshot.key
-
-                                            if (childKey != null) {
-                                                FirebaseDatabase.getInstance().getReference("miners").child(st_phone)
-                                                    .child("transactions").child(childKey)
-                                                    .child("Status").setValue("Processing...")
-                                            }
-                                        }
 
                                         FirebaseDatabase.getInstance().getReference("miners").child(st_phone)
                                             .child("block_queue").removeValue()

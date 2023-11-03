@@ -31,7 +31,6 @@ class TransactionDetailsActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_transaction_details)
 
-        // Initialize views
         transactionIDTextView = findViewById(R.id.transaction_id)
         senderTextView = findViewById(R.id.sender)
         receiverTextView = findViewById(R.id.receiver)

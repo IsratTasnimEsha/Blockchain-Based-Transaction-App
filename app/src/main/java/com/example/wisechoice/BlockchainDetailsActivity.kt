@@ -84,6 +84,7 @@ class BlockchainDetailsAdapter(
 class BlockchainDetailsActivity : AppCompatActivity() {
 
     private lateinit var st_id: String
+    private lateinit var st_path: String
     private lateinit var blockIDTextView: TextView
     private lateinit var blockHashTextView: TextView
     private lateinit var previousHashTextView: TextView
@@ -124,6 +125,7 @@ class BlockchainDetailsActivity : AppCompatActivity() {
         minedTextView= findViewById(R.id.mined)
 
         st_id = intent.getStringExtra("block_id") ?: ""
+        st_path = intent.getStringExtra("path") ?: ""
 
         val sharedPreferences = getSharedPreferences("MySharedPref", Context.MODE_PRIVATE)
         val st_phone = sharedPreferences.getString("Phone", "") ?: ""
@@ -131,7 +133,7 @@ class BlockchainDetailsActivity : AppCompatActivity() {
         fetchTransactionDetails(st_phone)
 
         databaseReference = FirebaseDatabase.getInstance().getReference("miners").child(st_phone)
-            .child("main_blockchain").child(st_id).child("transaction_details")
+            .child(st_path).child(st_id).child("transaction_details")
 
         recyclerView = findViewById(R.id.recycler)
         recyclerView.setHasFixedSize(true)
@@ -185,7 +187,7 @@ class BlockchainDetailsActivity : AppCompatActivity() {
 
     private fun fetchTransactionDetails(st_phone: String) {
         databaseReference = FirebaseDatabase.getInstance().getReference("miners").child(st_phone)
-            .child("main_blockchain").child(st_id)
+            .child(st_path).child(st_id)
 
         databaseReference.addListenerForSingleValueEvent(object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {

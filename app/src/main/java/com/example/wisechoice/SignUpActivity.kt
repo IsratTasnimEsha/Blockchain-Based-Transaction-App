@@ -60,21 +60,6 @@ class SignUpActivity : AppCompatActivity() {
                             databaseReference.child("miners").child(st_phone).child("Phone").setValue(st_phone)
                             databaseReference.child("miners").child(st_phone).child("Password").setValue(st_pass)
 
-                            //val block = databaseReference.child("miners").child(st_phone)
-                            //    .child("blockchain").child("Null")
-//
-                            //block.child("Block_Hash")
-                            //    .setValue("000000000000000000000000000000000000000000000000000000000000000000")
-                            //block.child("Previous_Hash").setValue("Null")
-                            //block.child("Block_ID").setValue("Null")
-                            //block.child("Miner").setValue("Null")
-                            //block.child("No_Of_Transactions").setValue("Null")
-                            //block.child("Nonce").setValue("Null")
-                            //block.child("Size").setValue("Null")
-                            //block.child("Total_Amount").setValue("Null")
-                            //block.child("Total_Fees").setValue("Null")
-                            //block.child("hasChild").setValue("False")
-
                            val intent = Intent(this@SignUpActivity, SignInActivity::class.java)
                            startActivity(intent)
                         }

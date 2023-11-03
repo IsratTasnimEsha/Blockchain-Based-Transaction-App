@@ -54,6 +54,47 @@ class TempBlockAdapter(
         holder.verify.text = "${verifies[position]}"
         val idValue = ids[position]
 
+        val sharedPreferences =
+            context.getSharedPreferences("MySharedPref", Context.MODE_PRIVATE)
+        val st_phone = sharedPreferences.getString("Phone", "") ?: ""
+
+        FirebaseDatabase.getInstance()
+            .getReference("miners")
+            .child(st_phone)
+            .child("main_blockchain")
+            .addListenerForSingleValueEvent(object : ValueEventListener {
+                override fun onDataChange(snapshot: DataSnapshot) {
+                    for (childSnapshot in snapshot.children) {
+                        val blockKey = childSnapshot.key
+                        val blockTransactionDetails = childSnapshot.child("transaction_details")
+
+                        blockTransactionDetails.children.forEach { transactionSnapshot ->
+                            val transactionKey = transactionSnapshot.key
+
+                            FirebaseDatabase.getInstance()
+                                .getReference("miners")
+                                .child(st_phone)
+                                .child("transactions")
+                                .child(transactionKey.toString())
+                                .child("Status")
+                                .setValue("Blocked")
+
+                            FirebaseDatabase.getInstance()
+                                .getReference("miners")
+                                .child(st_phone)
+                                .child("transactions")
+                                .child(transactionKey.toString())
+                                .child("Block_No")
+                                .setValue(blockKey.toString())
+                        }
+                    }
+                }
+
+                override fun onCancelled(error: DatabaseError) {
+                    // Handle onCancelled
+                }
+            })
+
         if(verifies[position] == "Unrecognized") {
             holder.sender.setTextColor(ContextCompat.getColor(context, R.color.olive))
             holder.receiver.setTextColor(ContextCompat.getColor(context, R.color.olive))

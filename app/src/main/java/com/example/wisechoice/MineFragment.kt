@@ -245,6 +245,16 @@ class MineFragment : Fragment(), NavigationView.OnNavigationItemSelectedListener
                                             val phone = childSnapshot.key
 
                                             if (phone != null) {
+
+                                                FirebaseDatabase.getInstance().getReference("miners")
+                                                    .child(phone).child("blockchain").removeValue()
+
+                                                FirebaseDatabase.getInstance()
+                                                    .getReference("miners")
+                                                    .child(phone).child("blockchain")
+                                                    .child(previousBlockID.toString())
+                                                    .setValue(dataSnapshot.child(previousBlockID.toString()).value)
+
                                                 FirebaseDatabase.getInstance()
                                                     .getReference("miners")
                                                     .child(phone).child("main_blockchain")
@@ -268,9 +278,6 @@ class MineFragment : Fragment(), NavigationView.OnNavigationItemSelectedListener
                                                             .child("Block_No").setValue(previousBlockID.toString())
                                                     }
                                                 }
-
-                                                FirebaseDatabase.getInstance().getReference("miners")
-                                                    .child(phone).child("blockchain").removeValue()
 
                                                 FirebaseDatabase.getInstance().getReference("miners")
                                                     .child(phone).child("block_queue")

@@ -244,6 +244,9 @@ class BlockDetailsActivity : AppCompatActivity() {
                         val blockchainReference = FirebaseDatabase.getInstance().getReference("miners")
                             .child(st_phone).child("blockchain").child(st_id)
 
+                        FirebaseDatabase.getInstance().getReference("miners")
+                            .child(st_phone).child("notifications").child(st_id).removeValue()
+
                         FirebaseDatabase.getInstance().getReference("miners").child(st_phone)
                             .child("block_queue").child(st_id)
                             .addListenerForSingleValueEvent(object : ValueEventListener {

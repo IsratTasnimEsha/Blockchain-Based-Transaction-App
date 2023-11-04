@@ -43,7 +43,34 @@ class NotificationAdapter(
     }
 
     override fun onBindViewHolder(holder: MyViewHolder, position: Int) {
-        holder.message.text = "${messages[position]}"
+        val sharedPreferences = context.getSharedPreferences("MySharedPref", Context.MODE_PRIVATE)
+        val st_phone = sharedPreferences.getString("Phone", "") ?: ""
+
+        if("${messages[position]}" == st_phone && "${activities[position]}" == "BlockDetailsActivity") {
+            holder.message.text = "Your Block is Now in the Queue, " +
+                    "Awaiting Its Fate in the Blockchain. " +
+                    "Stay Tuned!"
+        }
+
+        if("${messages[position]}" != st_phone && "${activities[position]}" == "BlockDetailsActivity") {
+            holder.message.text = "Block Queue Alert: " +
+                    "${messages[position]}" +
+                    " Has Mined a New Block! " +
+                    "Ready to Explore?"
+        }
+
+        if("${messages[position]}" == st_phone && "${activities[position]}" == "BlockchainDetailsActivity") {
+            holder.message.text = "Success! Your Block Is Now on the Blockchain." +
+                    " Want to Take a Look?"
+        }
+
+        if("${messages[position]}" != st_phone && "${activities[position]}" == "BlockchainDetailsActivity") {
+            holder.message.text = "Blockchain Update: " +
+                    "${messages[position]}" +
+                    "'s Block Now in the Chain." +
+                    "! Curious to Check It Out?"
+        }
+
         holder.notification_time.text = "${notification_times[position]}"
 
         if("${statuses[position]}" == "Unread") {

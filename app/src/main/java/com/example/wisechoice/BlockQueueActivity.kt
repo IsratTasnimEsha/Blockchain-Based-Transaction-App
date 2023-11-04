@@ -182,6 +182,7 @@ class BlockQueueActivity : AppCompatActivity() , NavigationView.OnNavigationItem
             .addListenerForSingleValueEvent(object : ValueEventListener {
                 override fun onDataChange(snapshot: DataSnapshot) {
                     for (childSnapshot in snapshot.children) {
+                        val blockKey = childSnapshot.child("Block_ID").getValue().toString()
                         val blockTransactionDetails = childSnapshot.child("transaction_details")
 
                         blockTransactionDetails.children.forEach { transactionSnapshot ->
@@ -211,8 +212,10 @@ class BlockQueueActivity : AppCompatActivity() , NavigationView.OnNavigationItem
                                 .addListenerForSingleValueEvent(object : ValueEventListener {
                                     override fun onDataChange(snapshot: DataSnapshot) {
                                         for (childSnapshot in snapshot.children) {
-                                            childSnapshot.child("transaction_details")
-                                                .child(transactionKey.toString()).ref.removeValue()
+                                            if(blockKey != childSnapshot.child("Block_ID").getValue().toString()) {
+                                                childSnapshot.child("transaction_details")
+                                                    .child(transactionKey.toString()).ref.removeValue()
+                                            }
                                         }
                                     }
 

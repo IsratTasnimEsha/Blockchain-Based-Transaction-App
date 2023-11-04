@@ -192,29 +192,33 @@ class TempBlockAdapter(
                         blockTransactionDetails.children.forEach { transactionSnapshot ->
                             val transactionKey = transactionSnapshot.key
 
-                            FirebaseDatabase.getInstance()
-                                .getReference("miners")
-                                .child(st_phone)
-                                .child("temporary_blocks")
-                                .child(transactionKey.toString())
-                                .removeValue()
+                            val st_status = blockTransactionDetails.child(transactionKey.toString())
+                                .child("Status").getValue().toString()
 
-                            FirebaseDatabase.getInstance()
-                                .getReference("miners")
-                                .child(st_phone)
-                                .child("transactions")
-                                .child(transactionKey.toString())
-                                .child("Status")
-                                .setValue(status)
+                            if(st_status != "Blocked") {
+                                FirebaseDatabase.getInstance()
+                                    .getReference("miners")
+                                    .child(st_phone)
+                                    .child("temporary_blocks")
+                                    .child(transactionKey.toString())
+                                    .removeValue()
 
-                            FirebaseDatabase.getInstance()
-                                .getReference("miners")
-                                .child(st_phone)
-                                .child("transactions")
-                                .child(transactionKey.toString())
-                                .child("Block_No")
-                                .setValue(blockKey.toString())
+                                FirebaseDatabase.getInstance()
+                                    .getReference("miners")
+                                    .child(st_phone)
+                                    .child("transactions")
+                                    .child(transactionKey.toString())
+                                    .child("Status")
+                                    .setValue(status)
 
+                                FirebaseDatabase.getInstance()
+                                    .getReference("miners")
+                                    .child(st_phone)
+                                    .child("transactions")
+                                    .child(transactionKey.toString())
+                                    .child("Block_No")
+                                    .setValue(blockKey.toString())
+                            }
                         }
                     }
                 }

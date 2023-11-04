@@ -186,6 +186,9 @@ class BlockchainDetailsActivity : AppCompatActivity() {
     }
 
     private fun fetchTransactionDetails(st_phone: String) {
+        val sharedPreferences = this.getSharedPreferences("MySharedPref", Context.MODE_PRIVATE)
+        val st_phone = sharedPreferences.getString("Phone", "") ?: ""
+
         databaseReference = FirebaseDatabase.getInstance().getReference("miners").child(st_phone)
             .child(st_path).child(st_id)
 

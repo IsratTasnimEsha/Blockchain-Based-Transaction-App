@@ -176,8 +176,7 @@ class TempBlockAdapter(
     }
 
     private fun checkBlockchain(path: String, status: String) {
-        val sharedPreferences =
-            context.getSharedPreferences("MySharedPref", Context.MODE_PRIVATE)
+        val sharedPreferences = context.getSharedPreferences("MySharedPref", Context.MODE_PRIVATE)
         val st_phone = sharedPreferences.getString("Phone", "") ?: ""
 
         FirebaseDatabase.getInstance()
@@ -193,26 +192,29 @@ class TempBlockAdapter(
                         blockTransactionDetails.children.forEach { transactionSnapshot ->
                             val transactionKey = transactionSnapshot.key
 
-                            val st_status = transactionSnapshot.child("Status").getValue().toString()
+                            FirebaseDatabase.getInstance()
+                                .getReference("miners")
+                                .child(st_phone)
+                                .child("temporary_blocks")
+                                .child(transactionKey.toString())
+                                .removeValue()
 
-                            if(st_status != "Blocked") {
+                            FirebaseDatabase.getInstance()
+                                .getReference("miners")
+                                .child(st_phone)
+                                .child("transactions")
+                                .child(transactionKey.toString())
+                                .child("Status")
+                                .setValue(status)
 
-                                FirebaseDatabase.getInstance()
-                                    .getReference("miners")
-                                    .child(st_phone)
-                                    .child("transactions")
-                                    .child(transactionKey.toString())
-                                    .child("Status")
-                                    .setValue(status)
+                            FirebaseDatabase.getInstance()
+                                .getReference("miners")
+                                .child(st_phone)
+                                .child("transactions")
+                                .child(transactionKey.toString())
+                                .child("Block_No")
+                                .setValue(blockKey.toString())
 
-                                FirebaseDatabase.getInstance()
-                                    .getReference("miners")
-                                    .child(st_phone)
-                                    .child("transactions")
-                                    .child(transactionKey.toString())
-                                    .child("Block_No")
-                                    .setValue(blockKey.toString())
-                            }
                         }
                     }
                 }
@@ -297,6 +299,20 @@ class AddToBlockFragment : Fragment(), NavigationView.OnNavigationItemSelectedLi
             requireContext().getSharedPreferences("MySharedPref", Context.MODE_PRIVATE)
         var st_phone = sharedPreferences.getString("Phone", "") ?: ""
 
+        phone?.text = st_phone
+        FirebaseDatabase.getInstance().getReference("miners").child(st_phone)
+            .addListenerForSingleValueEvent(object : ValueEventListener {
+                override fun onDataChange(snapshot: DataSnapshot) {
+                    val userName = snapshot.child("User_Name").getValue().toString()
+
+                    username?.text = userName
+                }
+
+                override fun onCancelled(error: DatabaseError) {
+
+                }
+            })
+
         databaseReference = FirebaseDatabase.getInstance().getReference("miners").child(st_phone)
             .child("transactions")
 
@@ -377,6 +393,9 @@ class AddToBlockFragment : Fragment(), NavigationView.OnNavigationItemSelectedLi
     }
 
     fun statusSelected(status1: String, status2: String, status3: String, status4: String, status5: String, status6: String) {
+        val sharedPreferences = requireContext().getSharedPreferences("MySharedPref", Context.MODE_PRIVATE)
+        val st_phone = sharedPreferences.getString("Phone", "") ?: ""
+
         databaseReference.addValueEventListener(object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
                 senders.clear()
@@ -426,6 +445,18 @@ class AddToBlockFragment : Fragment(), NavigationView.OnNavigationItemSelectedLi
             R.id.blockchain -> {
                 val intent2 = Intent(requireContext(), BlockchainActivity::class.java)
                 startActivity(intent2)
+            }
+            R.id.transaction -> {
+                val intent = Intent(requireContext(), MinerTransactionActivity::class.java)
+                startActivity(intent)
+            }
+            R.id.account -> {
+                val intent = Intent(requireContext(), AccountActivity::class.java)
+                startActivity(intent)
+            }
+            R.id.notifications -> {
+                val intent = Intent(requireContext(), NotificationActivity::class.java)
+                startActivity(intent)
             }
             R.id.logout -> {
                 val intent = Intent(requireContext(), SignInActivity::class.java)

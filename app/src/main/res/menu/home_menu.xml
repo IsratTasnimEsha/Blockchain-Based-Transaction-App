@@ -12,14 +12,24 @@
         android:title="Blockchain" />
 
     <item
+        android:id="@+id/transaction"
+        android:icon="@drawable/baseline_enhanced_encryption_24"
+        android:title="Transactions" />
+
+    <item
+        android:id="@+id/rejected"
+        android:icon="@drawable/baseline_enhanced_encryption_24"
+        android:title="Rejected Blocks" />
+
+    <item
+        android:id="@+id/notifications"
+        android:icon="@drawable/baseline_notifications_active_24"
+        android:title="Notifications" />
+
+    <item
         android:id="@+id/account"
         android:icon="@drawable/baseline_account_circle_24"
         android:title="Account" />
-
-    <item
-        android:id="@+id/reset_password"
-        android:icon="@drawable/baseline_security_24"
-        android:title="Reset Password" />
 
     <item
         android:id="@+id/logout"

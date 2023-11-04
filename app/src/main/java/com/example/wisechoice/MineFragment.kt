@@ -226,7 +226,9 @@ class MineFragment : Fragment(), NavigationView.OnNavigationItemSelectedListener
                                 for (childSnapshot in dataSnapshot.children) {
 
                                     val previousBlockID = childSnapshot.key
+                                    val previousMiner = childSnapshot.child("Miner").value
                                     val previousHash = childSnapshot.child("Block_Hash").value
+
                                     blockVal.child("Previous_Hash").setValue(previousHash)
 
                                     val minersRef =
@@ -239,6 +241,88 @@ class MineFragment : Fragment(), NavigationView.OnNavigationItemSelectedListener
                                                 val phone = childSnapshot.key
 
                                                 if (phone != null) {
+
+                                                    val currentDateTime = LocalDateTime.now()
+                                                    val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
+                                                    val formattedDateTime = currentDateTime.format(formatter)
+
+                                                    val reference = FirebaseDatabase.getInstance()
+                                                        .getReference("miners")
+                                                        .child(phone)
+                                                        .child("notifications")
+
+                                                    if(previousMiner == st_phone) {
+                                                        reference.child(previousBlockID.toString())
+                                                            .child("Message")
+                                                            .setValue(
+                                                                "Success! Your Block Is Now on the Blockchain." +
+                                                                        " Want to Take a Look?"
+                                                            )
+                                                    }
+
+                                                    else {
+                                                        reference.child(previousBlockID.toString())
+                                                            .child("Message")
+                                                            .setValue(
+                                                                "Blockchain Update: " +
+                                                                        previousMiner.toString() +
+                                                                        "'s Block Now in the Chain." +
+                                                                        "! Curious to Check It Out?"
+                                                            )
+                                                    }
+
+                                                    if(phone == st_phone) {
+                                                        reference.child(blockVal.key.toString())
+                                                            .child("Message")
+                                                            .setValue(
+                                                                "Your Block is Now in the Queue, " +
+                                                                        "Awaiting Its Fate in the Blockchain. " +
+                                                                        "Stay Tuned!"
+                                                            )
+                                                    }
+
+                                                    else {
+                                                        reference.child(blockVal.key.toString())
+                                                            .child("Message")
+                                                            .setValue(
+                                                                "Block Queue Alert: " +
+                                                                        st_phone +
+                                                                        "Has Mined a New Block! " +
+                                                                        "Ready to Explore?"
+                                                            )
+                                                    }
+
+                                                    reference.child(blockVal.key.toString())
+                                                        .child("Notification_Time")
+                                                        .setValue(formattedDateTime.toString())
+
+                                                    reference.child(previousBlockID.toString())
+                                                        .child("Notification_Time")
+                                                        .setValue(formattedDateTime.toString())
+
+                                                    reference.child(blockVal.key.toString())
+                                                        .child("Status")
+                                                        .setValue("Unread")
+
+                                                    reference.child(previousBlockID.toString())
+                                                        .child("Status")
+                                                        .setValue("Unread")
+
+                                                    reference.child(blockVal.key.toString())
+                                                        .child("Activity")
+                                                        .setValue("BlockDetailsActivity")
+
+                                                    reference.child(previousBlockID.toString())
+                                                        .child("Activity")
+                                                        .setValue("BlockchainDetailsActivity")
+
+                                                    reference.child(blockVal.key.toString())
+                                                        .child("Notification_ID")
+                                                        .setValue(blockVal.key.toString())
+
+                                                    reference.child(previousBlockID.toString())
+                                                        .child("Notification_ID")
+                                                        .setValue(previousBlockID.toString())
 
                                                     FirebaseDatabase.getInstance()
                                                         .getReference("miners")
@@ -407,7 +491,6 @@ class MineFragment : Fragment(), NavigationView.OnNavigationItemSelectedListener
 
         val st_phone = sharedPreferences.getString("Phone", "") ?: ""
 
-
         val tempBlocksReference = FirebaseDatabase.getInstance().getReference("miners")
             .child(st_phone).child("temporary_blocks")
 
@@ -460,16 +543,12 @@ class MineFragment : Fragment(), NavigationView.OnNavigationItemSelectedListener
                         blockTransactionDetails.children.forEach { transactionSnapshot ->
                             val transactionKey = transactionSnapshot.key
 
-                            FirebaseDatabase.getInstance()
-                                .getReference("miners")
-                                .child(st_phone)
-                                .child("temporary_blocks")
-                                .child(transactionKey.toString())
-                                .removeValue()
-
-                            val st_status = transactionSnapshot.child("Status").getValue().toString()
-
-                            if(st_status != "Blocked") {
+                                FirebaseDatabase.getInstance()
+                                    .getReference("miners")
+                                    .child(st_phone)
+                                    .child("temporary_blocks")
+                                    .child(transactionKey.toString())
+                                    .removeValue()
 
                                 FirebaseDatabase.getInstance()
                                     .getReference("miners")
@@ -486,7 +565,7 @@ class MineFragment : Fragment(), NavigationView.OnNavigationItemSelectedListener
                                     .child(transactionKey.toString())
                                     .child("Block_No")
                                     .setValue(blockKey.toString())
-                            }
+
                         }
                     }
                 }

@@ -128,9 +128,22 @@ class BlockQueueActivity : AppCompatActivity() , NavigationView.OnNavigationItem
 
         navigationView?.setNavigationItemSelectedListener(this)
 
-        var sharedPreferences =
-            this.getSharedPreferences("MySharedPref", Context.MODE_PRIVATE)
-        var st_phone = sharedPreferences.getString("Phone", "") ?: ""
+        val sharedPreferences = this.getSharedPreferences("MySharedPref", Context.MODE_PRIVATE)
+        val st_phone = sharedPreferences.getString("Phone", "") ?: ""
+
+        phone?.text = st_phone
+        FirebaseDatabase.getInstance().getReference("miners").child(st_phone)
+            .addListenerForSingleValueEvent(object : ValueEventListener {
+                override fun onDataChange(snapshot: DataSnapshot) {
+                    val userName = snapshot.child("User_Name").getValue().toString()
+
+                    username?.text = userName
+                }
+
+                override fun onCancelled(error: DatabaseError) {
+
+                }
+            })
 
         val reference = FirebaseDatabase.getInstance()
             .getReference("miners")
@@ -266,9 +279,21 @@ class BlockQueueActivity : AppCompatActivity() , NavigationView.OnNavigationItem
                 val intent2 = Intent(this, BlockQueueActivity::class.java)
                 startActivity(intent2)
             }
+            R.id.transaction -> {
+                val intent = Intent(this, MinerTransactionActivity::class.java)
+                startActivity(intent)
+            }
             R.id.blockchain -> {
                 val intent2 = Intent(this, BlockchainActivity::class.java)
                 startActivity(intent2)
+            }
+            R.id.account -> {
+                val intent = Intent(this, AccountActivity::class.java)
+                startActivity(intent)
+            }
+            R.id.notifications -> {
+                val intent = Intent(this, NotificationActivity::class.java)
+                startActivity(intent)
             }
             R.id.logout -> {
                 val intent = Intent(this, SignInActivity::class.java)

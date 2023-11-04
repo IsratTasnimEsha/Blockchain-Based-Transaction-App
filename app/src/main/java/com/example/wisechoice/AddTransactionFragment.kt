@@ -11,8 +11,13 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
 import android.widget.EditText
+import android.widget.ImageView
+import android.widget.TextView
 import android.widget.Toast
 import androidx.annotation.RequiresApi
+import androidx.appcompat.app.ActionBarDrawerToggle
+import androidx.core.view.GravityCompat
+import androidx.drawerlayout.widget.DrawerLayout
 import androidx.fragment.app.Fragment
 import com.google.android.material.navigation.NavigationView
 import com.google.firebase.database.DataSnapshot
@@ -35,12 +40,59 @@ class AddTransactionFragment : Fragment(), NavigationView.OnNavigationItemSelect
     private lateinit var sharedPreferences: SharedPreferences
     private lateinit var databaseReference: DatabaseReference
 
+    var drawerLayout: DrawerLayout? = null
+    var navigationView: NavigationView? = null
+    var nView: View? = null
+
+    var username: TextView? = null
+    var phone: TextView? = null
+    var photo: ImageView? = null
+    var home_menu: ImageView? = null
+
     @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
         val view = inflater.inflate(R.layout.fragment_add_transaction, container, false)
+
+        drawerLayout = view.findViewById<DrawerLayout>(R.id.drawer)
+
+        val actionBarDrawerToggle = ActionBarDrawerToggle(
+            requireActivity(), drawerLayout,
+            R.string.navigation_drawer_open, R.string.navigation_drawer_close
+        )
+        actionBarDrawerToggle.syncState()
+
+        navigationView = view.findViewById<NavigationView>(R.id.navigation)
+        nView = navigationView?.getHeaderView(0)
+        username = nView?.findViewById<TextView>(R.id.username)
+        phone = nView?.findViewById<TextView>(R.id.phone)
+        photo = nView?.findViewById<ImageView>(R.id.photo)
+        home_menu = view.findViewById<ImageView>(R.id.home_menu)
+
+        home_menu?.setOnClickListener {
+            drawerLayout?.openDrawer(GravityCompat.START)
+        }
+
+        navigationView?.setNavigationItemSelectedListener(this)
+
+        val sharedPreferences = requireContext().getSharedPreferences("MySharedPref", Context.MODE_PRIVATE)
+        val st_phone = sharedPreferences.getString("Phone", "") ?: ""
+
+        phone?.text = st_phone
+        FirebaseDatabase.getInstance().getReference("miners").child(st_phone)
+            .addListenerForSingleValueEvent(object : ValueEventListener {
+                override fun onDataChange(snapshot: DataSnapshot) {
+                    val userName = snapshot.child("User_Name").getValue().toString()
+
+                    username?.text = userName
+                }
+
+                override fun onCancelled(error: DatabaseError) {
+
+                }
+            })
 
         receiverField = view.findViewById(R.id.receiver)
         amountField = view.findViewById(R.id.amount)
@@ -50,9 +102,6 @@ class AddTransactionFragment : Fragment(), NavigationView.OnNavigationItemSelect
         signatureButton = view.findViewById(R.id.signatureButton)
 
         databaseReference = FirebaseDatabase.getInstance().getReference()
-
-        sharedPreferences = requireActivity().getSharedPreferences("MySharedPref", Context.MODE_PRIVATE)
-        st_phone = sharedPreferences.getString("Phone", "").toString()
 
         signatureButton.setOnClickListener {
             fetchSignatureFromFirebase()
@@ -66,6 +115,9 @@ class AddTransactionFragment : Fragment(), NavigationView.OnNavigationItemSelect
     }
 
     private fun fetchSignatureFromFirebase() {
+        val sharedPreferences = requireContext().getSharedPreferences("MySharedPref", Context.MODE_PRIVATE)
+        val st_phone = sharedPreferences.getString("Phone", "") ?: ""
+
         databaseReference.child("miners").child(st_phone)
             .addListenerForSingleValueEvent(object : ValueEventListener {
                 override fun onDataChange(snapshot: DataSnapshot) {
@@ -85,6 +137,9 @@ class AddTransactionFragment : Fragment(), NavigationView.OnNavigationItemSelect
 
     @RequiresApi(Build.VERSION_CODES.O)
     private fun performTransaction() {
+        val sharedPreferences = requireContext().getSharedPreferences("MySharedPref", Context.MODE_PRIVATE)
+        val st_phone = sharedPreferences.getString("Phone", "") ?: ""
+
         val st_receiver = receiverField.text.toString()
         val st_amount = amountField.text.toString().toDoubleOrNull() ?: 0.0
         val st_fees = feesField.text.toString().toDoubleOrNull() ?: 0.0
@@ -139,27 +194,47 @@ class AddTransactionFragment : Fragment(), NavigationView.OnNavigationItemSelect
         })
     }
 
-    private fun updateSenderBalance(newBalance: Double, amount: Double, fees: Double, receiver: String, signature: String ,formattedDateTime:String) {
-        val senderRef = databaseReference.child("miners").child(st_phone)
-        senderRef.child("Balance").setValue(newBalance)
+    private fun updateSenderBalance(newBalance: Double, amount: Double, fees: Double, receiver: String, signature: String, formattedDateTime: String) {
+        val sharedPreferences = requireContext().getSharedPreferences("MySharedPref", Context.MODE_PRIVATE)
+        val st_phone = sharedPreferences.getString("Phone", "") ?: ""
 
+        val senderRef = databaseReference.child("miners")
+
+        // Generate a single transaction key for all phones
         val transactionKey = databaseReference.child("transactions").push().key
-        val newTransactionRef = senderRef.child("transactions").child(transactionKey!!)
-        val refString = newTransactionRef.key
 
-        newTransactionRef.apply {
-            child("Amount").setValue(amount)
-            child("Fees").setValue(fees)
-            child("Receiver").setValue(receiver)
-            child("Sender").setValue(st_phone)
-            child("Signature").setValue(signature)
-            child("Transaction_ID").setValue(refString.toString())
-            newTransactionRef.child("Transaction_Time")
-                .setValue(formattedDateTime.toString())
-            child("Status").setValue("Unrecognized")
-        }
+        senderRef.addListenerForSingleValueEvent(object : ValueEventListener {
+            override fun onDataChange(snapshot: DataSnapshot) {
+                for (childSnapshot in snapshot.children) {
+                    val phone = childSnapshot.key
 
-        Toast.makeText(requireContext(), "The Transaction Has Occurred.", Toast.LENGTH_SHORT).show()
+                    if (phone != null) {
+                        senderRef.child(phone).child("Balance").setValue(newBalance)
+
+                        // Use the same transaction key for all phones
+                        val newTransactionRef = senderRef.child(phone).child("transactions").child(transactionKey!!)
+                        val refString = newTransactionRef.key
+
+                        newTransactionRef.apply {
+                            child("Amount").setValue(amount)
+                            child("Fees").setValue(fees)
+                            child("Receiver").setValue(receiver)
+                            child("Sender").setValue(st_phone)
+                            child("Signature").setValue(signature)
+                            child("Transaction_ID").setValue(refString.toString())
+                            newTransactionRef.child("Transaction_Time").setValue(formattedDateTime.toString())
+                            child("Status").setValue("Unrecognized")
+
+                            Toast.makeText(requireContext(), "The Transaction Has Occurred.", Toast.LENGTH_SHORT).show()
+                        }
+                    }
+                }
+            }
+
+            override fun onCancelled(error: DatabaseError) {
+
+            }
+        })
 
         receiverField.text.clear()
         amountField.text.clear()
@@ -177,10 +252,18 @@ class AddTransactionFragment : Fragment(), NavigationView.OnNavigationItemSelect
                 val intent = Intent(requireContext(), BlockchainActivity::class.java)
                 startActivity(intent)
             }
+            R.id.account -> {
+                val intent = Intent(requireContext(), AccountActivity::class.java)
+                startActivity(intent)
+            }
+            R.id.notifications -> {
+                val intent = Intent(requireContext(), NotificationActivity::class.java)
+                startActivity(intent)
+            }
             R.id.logout -> {
                 val intent = Intent(requireContext(), SignInActivity::class.java)
                 startActivity(intent)
-                requireActivity().finish()
+                requireActivity().finish() // Finish the current activity
             }
         }
         return true

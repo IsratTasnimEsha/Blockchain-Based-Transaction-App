@@ -62,7 +62,7 @@ class SignUpActivity : AppCompatActivity() {
 
                 val signature = generateSignature(st_name, st_phone, privateKey) // Generate signature
 
-                val initialBalance = 10.0
+                val initialBalance = 50.0
 
                 databaseReference.child("miners").addListenerForSingleValueEvent(object : ValueEventListener {
                     @RequiresApi(Build.VERSION_CODES.O)
@@ -90,19 +90,21 @@ class SignUpActivity : AppCompatActivity() {
                     }
 
                     override fun onCancelled(error: DatabaseError) {
-
+                        // Handle errors
                     }
                 })
             }
         })
     }
 
+    // Generate Key Pair
     private fun generateKeyPair(): KeyPair {
         val keyGen = KeyPairGenerator.getInstance("RSA")
         keyGen.initialize(2048)
         return keyGen.generateKeyPair()
     }
 
+    // Generate Signature
     private fun generateSignature(name: String, phone: String, privateKey: PrivateKey): ByteArray {
         val data = "$name$phone".toByteArray()
         val signature = Signature.getInstance("SHA256withRSA")

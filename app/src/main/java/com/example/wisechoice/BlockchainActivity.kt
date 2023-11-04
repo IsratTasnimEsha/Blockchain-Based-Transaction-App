@@ -12,6 +12,7 @@ import android.widget.ImageView
 import android.widget.TextView
 import androidx.appcompat.app.ActionBarDrawerToggle
 import androidx.cardview.widget.CardView
+import androidx.core.content.ContentProviderCompat.requireContext
 import androidx.core.view.GravityCompat
 import androidx.drawerlayout.widget.DrawerLayout
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -119,9 +120,22 @@ class BlockchainActivity : AppCompatActivity() , NavigationView.OnNavigationItem
 
         navigationView?.setNavigationItemSelectedListener(this)
 
-        var sharedPreferences =
-            this.getSharedPreferences("MySharedPref", Context.MODE_PRIVATE)
-        var st_phone = sharedPreferences.getString("Phone", "") ?: ""
+        val sharedPreferences = this.getSharedPreferences("MySharedPref", Context.MODE_PRIVATE)
+        val st_phone = sharedPreferences.getString("Phone", "") ?: ""
+
+        phone?.text = st_phone
+        FirebaseDatabase.getInstance().getReference("miners").child(st_phone)
+            .addListenerForSingleValueEvent(object : ValueEventListener {
+                override fun onDataChange(snapshot: DataSnapshot) {
+                    val userName = snapshot.child("User_Name").getValue().toString()
+
+                    username?.text = userName
+                }
+
+                override fun onCancelled(error: DatabaseError) {
+
+                }
+            })
 
         databaseReference = FirebaseDatabase.getInstance().getReference("miners").child(st_phone)
             .child("main_blockchain")
@@ -179,6 +193,18 @@ class BlockchainActivity : AppCompatActivity() , NavigationView.OnNavigationItem
             R.id.blockchain -> {
                 val intent2 = Intent(this, BlockchainActivity::class.java)
                 startActivity(intent2)
+            }
+            R.id.transaction -> {
+                val intent = Intent(this, MinerTransactionActivity::class.java)
+                startActivity(intent)
+            }
+            R.id.account -> {
+                val intent = Intent(this, AccountActivity::class.java)
+                startActivity(intent)
+            }
+            R.id.notifications -> {
+                val intent = Intent(this, NotificationActivity::class.java)
+                startActivity(intent)
             }
             R.id.logout -> {
                 val intent = Intent(this, SignInActivity::class.java)

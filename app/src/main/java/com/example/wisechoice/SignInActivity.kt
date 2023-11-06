@@ -2,6 +2,7 @@ package com.example.wisechoice
 
 import android.content.Context
 import android.content.Intent
+import android.content.SharedPreferences
 import android.os.Bundle
 import android.view.View
 import android.widget.EditText
@@ -42,9 +43,9 @@ class SignInActivity : AppCompatActivity() {
                         val str_pass = snapshot.child(st_phone).child("Password").value as? String
 
                         if (str_pass == st_pass) {
-                            val sharedPreferences = getSharedPreferences("MySharedPref", Context.MODE_PRIVATE)
-                            val editor = sharedPreferences.edit()
-                            editor.putString("Phone", st_phone)
+                            val sharedPrefs = getSharedPreferences(SignInActivity.PREFS_NAME, Context.MODE_PRIVATE)
+                            val editor = sharedPrefs.edit()
+                            editor.putBoolean("hasSignedIn", true)
                             editor.apply()
 
                             val intent = Intent(this@SignInActivity, MinerTransactionActivity::class.java)
@@ -62,5 +63,9 @@ class SignInActivity : AppCompatActivity() {
                 }
             })
         }
+    }
+
+    companion object {
+        const val PREFS_NAME = "MySharedPref"
     }
 }

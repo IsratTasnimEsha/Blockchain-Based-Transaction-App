@@ -38,7 +38,11 @@ android {
         jvmTarget = "1.8"
     }
     buildFeatures {
+        viewBinding = true
         compose = true
+    }
+    dataBinding {
+        enable = true
     }
     composeOptions {
         kotlinCompilerExtensionVersion = "1.4.3"

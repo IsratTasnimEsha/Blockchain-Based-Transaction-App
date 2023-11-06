@@ -23,8 +23,17 @@ class SplashActivity : AppCompatActivity() {
 
         val handler = Handler()
         handler.postDelayed({
-            startActivity(Intent(this@SplashActivity, SignInActivity::class.java))
-            finish()
-        }, 3000)
+            val sharedPreferences = getSharedPreferences(SignInActivity.PREFS_NAME, 0)
+            val hasLoggedIn = sharedPreferences.getBoolean("hasSignedIn", false)
+
+            if (hasLoggedIn) {
+                val intent = Intent(this@SplashActivity, MinerTransactionActivity::class.java)
+                startActivity(intent)
+                finish()
+            } else {
+                val intent = Intent(this@SplashActivity, SignInActivity::class.java)
+                startActivity(intent)
+            }
+        }, 2000)
     }
 }

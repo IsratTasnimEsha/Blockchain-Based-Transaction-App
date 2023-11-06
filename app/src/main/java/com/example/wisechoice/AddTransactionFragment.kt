@@ -25,8 +25,12 @@ import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
+import java.security.KeyFactory
+import java.security.Signature
+import java.security.spec.PKCS8EncodedKeySpec
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
+import java.util.Base64
 
 class AddTransactionFragment : Fragment(), NavigationView.OnNavigationItemSelectedListener {
 
@@ -242,6 +246,18 @@ class AddTransactionFragment : Fragment(), NavigationView.OnNavigationItemSelect
         signatureField.text.clear()
     }
 
+    @RequiresApi(Build.VERSION_CODES.O)
+    private fun createSignature(senderPrivateKey: String, dataToSign: String): ByteArray {
+        val privateBytes = Base64.getDecoder().decode(senderPrivateKey)
+        val privateKey = KeyFactory.getInstance("RSA").generatePrivate(PKCS8EncodedKeySpec(privateBytes))
+
+        val signature = Signature.getInstance("SHA256withRSA")
+        signature.initSign(privateKey)
+        signature.update(dataToSign.toByteArray())
+
+        return signature.sign()
+    }
+
     override fun onNavigationItemSelected(item: MenuItem): Boolean {
         when (item.itemId) {
             R.id.block_queue -> {
@@ -261,11 +277,20 @@ class AddTransactionFragment : Fragment(), NavigationView.OnNavigationItemSelect
                 startActivity(intent)
             }
             R.id.logout -> {
+                val sharedPrefs = context?.getSharedPreferences(SignInActivity.PREFS_NAME, Context.MODE_PRIVATE)
+                val editor = sharedPrefs?.edit()
+                editor?.putBoolean("hasSignedIn", false)
+                editor?.apply()
+
                 val intent = Intent(requireContext(), SignInActivity::class.java)
                 startActivity(intent)
                 requireActivity().finish() // Finish the current activity
             }
         }
         return true
+    }
+
+    companion object {
+        const val PREFS_NAME = "MySharedPref"
     }
 }

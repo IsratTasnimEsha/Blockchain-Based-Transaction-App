@@ -324,6 +324,12 @@ class MineFragment : Fragment(), NavigationView.OnNavigationItemSelectedListener
                                                                         FirebaseDatabase.getInstance()
                                                                             .getReference("miners")
                                                                             .child(phone)
+                                                                            .child("rejected_blocks")
+                                                                            .setValue(dataSnapshot.child(ID.toString()).value)
+
+                                                                        FirebaseDatabase.getInstance()
+                                                                            .getReference("miners")
+                                                                            .child(phone)
                                                                             .child("block_queue")
                                                                             .child(ID.toString())
                                                                             .removeValue()

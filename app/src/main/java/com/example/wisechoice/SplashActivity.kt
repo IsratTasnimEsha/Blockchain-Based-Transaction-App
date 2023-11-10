@@ -20,7 +20,6 @@ class SplashActivity : AppCompatActivity() {
         logo = findViewById<ImageView>(R.id.logo)
         logo?.startAnimation(top)
 
-
         val handler = Handler()
         handler.postDelayed({
             val sharedPreferences = getSharedPreferences(SignInActivity.PREFS_NAME, 0)

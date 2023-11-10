@@ -9,6 +9,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
 import android.widget.TextView
+import android.widget.Toast
 import androidx.cardview.widget.CardView
 import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -270,6 +271,13 @@ class BlockDetailsActivity : AppCompatActivity() {
 
                         FirebaseDatabase.getInstance().getReference("miners").child(st_phone)
                             .child("block_queue").child(st_id).removeValue()
+
+                        Toast.makeText(
+                            this@BlockDetailsActivity,
+                            "This Block Has Been Added To Your Blockchain Successfully. " +
+                                    "Mine The Next Block Of It To Add It To The Main Blockchain.",
+                            Toast.LENGTH_SHORT
+                        ).show()
                     }
                 }
             }

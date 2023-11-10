@@ -204,7 +204,6 @@ class AddTransactionFragment : Fragment(), NavigationView.OnNavigationItemSelect
 
         val senderRef = databaseReference.child("miners")
 
-        // Generate a single transaction key for all phones
         val transactionKey = databaseReference.child("transactions").push().key
 
         senderRef.addListenerForSingleValueEvent(object : ValueEventListener {
@@ -215,7 +214,6 @@ class AddTransactionFragment : Fragment(), NavigationView.OnNavigationItemSelect
                     if (phone != null) {
                         senderRef.child(phone).child("Balance").setValue(newBalance)
 
-                        // Use the same transaction key for all phones
                         val newTransactionRef = senderRef.child(phone).child("transactions").child(transactionKey!!)
                         val refString = newTransactionRef.key
 

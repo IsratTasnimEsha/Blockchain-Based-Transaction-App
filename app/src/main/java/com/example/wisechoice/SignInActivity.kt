@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
 import android.os.Bundle
+import android.os.Handler
 import android.view.View
 import android.widget.EditText
 import android.widget.Toast
@@ -46,6 +47,7 @@ class SignInActivity : AppCompatActivity() {
                             val sharedPrefs = getSharedPreferences(SignInActivity.PREFS_NAME, Context.MODE_PRIVATE)
                             val editor = sharedPrefs.edit()
                             editor.putBoolean("hasSignedIn", true)
+                            editor.putString("Phone", st_phone)
                             editor.apply()
 
                             val intent = Intent(this@SignInActivity, MinerTransactionActivity::class.java)

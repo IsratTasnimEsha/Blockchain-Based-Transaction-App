@@ -55,12 +55,12 @@ class SignUpActivity : AppCompatActivity() {
                 r_pass.setError("Password Is Required.")
                 Toast.makeText(this@SignUpActivity, "Password Is Required.", Toast.LENGTH_SHORT).show()
             } else {
-                val keyPair = generateKeyPair() // Generate public and private key pair
+                val keyPair = generateKeyPair()
 
                 val publicKey = keyPair.public
                 val privateKey = keyPair.private
 
-                val signature = generateSignature(st_name, st_phone, privateKey) // Generate signature
+                val signature = generateSignature(st_name, st_phone, privateKey)
 
                 val initialBalance = 50.0
 
@@ -78,8 +78,7 @@ class SignUpActivity : AppCompatActivity() {
                             databaseReference.child("miners").child(st_phone).child("Signature").setValue(Base64.getEncoder().encodeToString(signature))
                             databaseReference.child("miners").child(st_phone).child("Balance").setValue(initialBalance)
 
-                            // Storing user data under "PublicKeys" node under "miners"
-                            val userReference = databaseReference.child("miners").child("PublicKeys").child(st_phone)
+                            val userReference = databaseReference.child("PublicKeys").child(st_phone)
                             userReference.child("User_Name").setValue(st_name)
                             userReference.child("Phone").setValue(st_phone)
                             userReference.child("Public_Key").setValue(Base64.getEncoder().encodeToString(publicKey.encoded))
@@ -90,21 +89,19 @@ class SignUpActivity : AppCompatActivity() {
                     }
 
                     override fun onCancelled(error: DatabaseError) {
-                        // Handle errors
+
                     }
                 })
             }
         })
     }
 
-    // Generate Key Pair
     private fun generateKeyPair(): KeyPair {
         val keyGen = KeyPairGenerator.getInstance("RSA")
         keyGen.initialize(2048)
         return keyGen.generateKeyPair()
     }
 
-    // Generate Signature
     private fun generateSignature(name: String, phone: String, privateKey: PrivateKey): ByteArray {
         val data = "$name$phone".toByteArray()
         val signature = Signature.getInstance("SHA256withRSA")

@@ -44,6 +44,17 @@
                 android:textSize="16dp"
                 android:text="Phone: " />
 
+            <TextView
+                android:id="@+id/balance"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="4dp"
+                android:drawableLeft="@drawable/baseline_attach_money_24"
+                android:drawablePadding="5dp"
+                android:padding="3dp"
+                android:textSize="16dp"
+                android:text="Balance : " />
+
             <androidx.cardview.widget.CardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"

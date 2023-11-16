@@ -187,29 +187,38 @@ class BlockchainActivity : AppCompatActivity() , NavigationView.OnNavigationItem
     override fun onNavigationItemSelected(item: MenuItem): Boolean {
         when (item.itemId) {
             R.id.block_queue -> {
-                val intent2 = Intent(this, BlockQueueActivity::class.java)
-                startActivity(intent2)
-            }
-            R.id.blockchain -> {
-                val intent2 = Intent(this, BlockchainActivity::class.java)
-                startActivity(intent2)
-            }
-            R.id.transaction -> {
-                val intent = Intent(this, MinerTransactionActivity::class.java)
+                val intent = Intent(this, BlockQueueActivity::class.java)
                 startActivity(intent)
             }
-            R.id.account -> {
-                val intent = Intent(this, AccountActivity::class.java)
+            R.id.blockchain -> {
+                val intent = Intent(this, BlockchainActivity::class.java)
+                startActivity(intent)
+            }
+            R.id.transaction -> {
+                val intent = Intent(this, TransactionDetailsActivity::class.java)
+                startActivity(intent)
+            }
+            R.id.rejected -> {
+                val intent = Intent(this, RejectedBlocksActivity::class.java)
                 startActivity(intent)
             }
             R.id.notifications -> {
                 val intent = Intent(this, NotificationActivity::class.java)
                 startActivity(intent)
             }
+            R.id.account -> {
+                val intent = Intent(this, AccountActivity::class.java)
+                startActivity(intent)
+            }
             R.id.logout -> {
+                val sharedPrefs = this.getSharedPreferences(SignInActivity.PREFS_NAME, Context.MODE_PRIVATE)
+                val editor = sharedPrefs?.edit()
+                editor?.putBoolean("hasSignedIn", false)
+                editor?.apply()
+
                 val intent = Intent(this, SignInActivity::class.java)
                 startActivity(intent)
-                this.finish()
+                this.finish() // Finish the current activity
             }
         }
         return true

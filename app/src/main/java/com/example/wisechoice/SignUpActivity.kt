@@ -1,4 +1,5 @@
 package com.example.wisechoice
+
 import android.content.Intent
 import android.os.Build
 import android.os.Bundle
@@ -20,7 +21,6 @@ import java.security.PrivateKey
 import java.security.PublicKey
 import java.security.Signature
 import java.util.Base64
-import java.util.concurrent.TimeUnit
 
 class SignUpActivity : AppCompatActivity() {
 
@@ -29,7 +29,9 @@ class SignUpActivity : AppCompatActivity() {
     private lateinit var r_pass: EditText
     private lateinit var r_signup: Button
     private lateinit var databaseReference: DatabaseReference
+    private lateinit var r_privateKey: String
 
+    @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_sign_up)
@@ -60,9 +62,9 @@ class SignUpActivity : AppCompatActivity() {
                 val publicKey = keyPair.public
                 val privateKey = keyPair.private
 
-                val signature = generateSignature(st_name, st_phone, privateKey)
+                r_privateKey = Base64.getEncoder().encodeToString(privateKey.encoded)
 
-                val initialBalance = 50.0
+
 
                 databaseReference.child("miners").addListenerForSingleValueEvent(object : ValueEventListener {
                     @RequiresApi(Build.VERSION_CODES.O)
@@ -75,8 +77,8 @@ class SignUpActivity : AppCompatActivity() {
                             databaseReference.child("miners").child(st_phone).child("Phone").setValue(st_phone)
                             databaseReference.child("miners").child(st_phone).child("Password").setValue(st_pass)
                             databaseReference.child("miners").child(st_phone).child("Public_Key").setValue(Base64.getEncoder().encodeToString(publicKey.encoded))
-                            databaseReference.child("miners").child(st_phone).child("Signature").setValue(Base64.getEncoder().encodeToString(signature))
-                            databaseReference.child("miners").child(st_phone).child("Balance").setValue(initialBalance)
+                            databaseReference.child("miners").child(st_phone).child("Private_Key").setValue(r_privateKey)
+                            databaseReference.child("miners").child(st_phone).child("Balance").setValue(10.0)
 
                             val userReference = databaseReference.child("PublicKeys").child(st_phone)
                             userReference.child("User_Name").setValue(st_name)
@@ -102,11 +104,4 @@ class SignUpActivity : AppCompatActivity() {
         return keyGen.generateKeyPair()
     }
 
-    private fun generateSignature(name: String, phone: String, privateKey: PrivateKey): ByteArray {
-        val data = "$name$phone".toByteArray()
-        val signature = Signature.getInstance("SHA256withRSA")
-        signature.initSign(privateKey)
-        signature.update(data)
-        return signature.sign()
-    }
 }

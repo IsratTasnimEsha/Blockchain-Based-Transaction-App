@@ -1,7 +1,8 @@
 package com.example.wisechoice
-
+import android.util.Log
 import android.content.Context
 import android.content.Intent
+import android.os.Build
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.MenuItem
@@ -11,6 +12,8 @@ import android.widget.Button
 import android.widget.ImageView
 import android.widget.PopupMenu
 import android.widget.TextView
+import android.widget.Toast
+import androidx.annotation.RequiresApi
 import androidx.appcompat.app.ActionBarDrawerToggle
 import androidx.cardview.widget.CardView
 import androidx.core.content.ContextCompat
@@ -25,6 +28,10 @@ import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
+import java.security.KeyFactory
+import java.security.Signature
+import java.security.spec.X509EncodedKeySpec
+import java.util.Base64
 
 class TempBlockAdapter(
     private val context: Context,
@@ -34,17 +41,57 @@ class TempBlockAdapter(
     private val feeses: List<String>,
     private val verifies: List<String>,
     private val ids: List<String>,
+    private val signatures: List<String>,
     private val transaction_times: List<String>,
 
     private var databaseReference: DatabaseReference = FirebaseDatabase.getInstance().getReference()
 
 ) : RecyclerView.Adapter<TempBlockAdapter.MyViewHolder>() {
 
+    private fun retrieveSenderPublicKey(senderPhone: String, callback: (String?) -> Unit) {
+        val databaseReference = FirebaseDatabase.getInstance().getReference("PublicKeys").child(senderPhone)
+
+        databaseReference.addListenerForSingleValueEvent(object : ValueEventListener {
+            override fun onDataChange(snapshot: DataSnapshot) {
+                val publicKey = snapshot.child("Public_Key").getValue(String::class.java)
+                callback(publicKey)
+            }
+
+            override fun onCancelled(error: DatabaseError) {
+                callback(null)
+            }
+        })
+    }
+    @RequiresApi(Build.VERSION_CODES.O)
+    private fun verifySignature(publicKey: String, signature: String, data: String): Boolean {
+        try {
+
+            Log.d("SignatureVerification", "Public Key: $publicKey")
+            Log.d("SignatureVerification", "Signature: $signature")
+            Log.d("SignatureVerification", "Data: $data")
+
+            val publicBytes = Base64.getDecoder().decode(publicKey)
+            val keySpec = X509EncodedKeySpec(publicBytes)
+            val keyFactory = KeyFactory.getInstance("RSA")
+            val public_key = keyFactory.generatePublic(keySpec)
+
+            val signatureBytes = Base64.getDecoder().decode(signature)
+            val signature = Signature.getInstance("SHA256withRSA")
+            signature.initVerify(public_key)
+            signature.update(data.toByteArray())
+
+            return signature.verify(signatureBytes)
+        } catch (e: Exception) {
+            e.printStackTrace()
+            return false
+        }
+    }
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): MyViewHolder {
         val view: View = LayoutInflater.from(context).inflate(R.layout.temp_block_xml, parent, false)
         return MyViewHolder(view)
     }
 
+    @RequiresApi(Build.VERSION_CODES.O)
     override fun onBindViewHolder(holder: MyViewHolder, position: Int) {
 
         holder.sender.text = "${senders[position]}"
@@ -53,6 +100,8 @@ class TempBlockAdapter(
         holder.fees.text = "${feeses[position]}"
         holder.verify.text = "${verifies[position]}"
         val idValue = ids[position]
+        val signatureValue = signatures[position]
+        val timeval = transaction_times[position]
 
         checkBlockchain("main_blockchain", "Blocked")
         checkBlockchain("blockchain", "Temporary Blocked")
@@ -135,14 +184,26 @@ class TempBlockAdapter(
             val st_phone = sharedPreferences.getString("Phone", "") ?: ""
 
             if(holder.verify.text == "Unrecognized") {
-                val newTransactionRef = databaseReference.child("miners").child(st_phone)
-                    .child("transactions").child(idValue)
-                newTransactionRef.child("Status").setValue("Verified")
 
-                holder.verify.text = "Verified"
-                holder.verify_button.text = "Add To Block"
-                holder.verify_button.isEnabled = true
-                holder.transaction_card.setBackgroundColor(ContextCompat.getColor(context, R.color.green))
+                retrieveSenderPublicKey(senders[position]) { publicKey ->
+                    if (publicKey != null) {
+                        val signatureVerified = verifySignature(publicKey, signatures[position], "${receivers[position]}${amounts[position]}${feeses[position]}$timeval")
+                        if (signatureVerified) {
+                            Toast.makeText(context, "Signature Verified.\nSignature Algorithm: SHA256withRSA\nKey-Factory Algorithm: RSA", Toast.LENGTH_LONG).show()
+
+                            val newTransactionRef = databaseReference.child("miners").child(st_phone)
+                                .child("transactions").child(idValue)
+                            newTransactionRef.child("Status").setValue("Verified")
+
+                            holder.verify.text = "Verified"
+                            holder.verify_button.text = "Add To Block"
+                            holder.verify_button.isEnabled = true
+                            holder.transaction_card.setBackgroundColor(ContextCompat.getColor(context, R.color.green))
+
+                        }
+                    }
+
+                }
             }
 
             else if(holder.verify.text == "Verified") {
@@ -163,6 +224,8 @@ class TempBlockAdapter(
                 tempTransactionRef.child("Receiver").setValue("${receivers[position]}")
                 tempTransactionRef.child("Amount").setValue("${amounts[position]}")
                 tempTransactionRef.child("Fees").setValue("${feeses[position]}")
+                tempTransactionRef.child("Signature").setValue("${signatures[position]}")
+                tempTransactionRef.child("Transaction_Time").setValue("${transaction_times[position]}")
             }
         }
 
@@ -258,6 +321,7 @@ class AddToBlockFragment : Fragment(), NavigationView.OnNavigationItemSelectedLi
     private val feeses = mutableListOf<String>()
     private val verifies = mutableListOf<String>()
     private val ids = mutableListOf<String>()
+    private val signatures = mutableListOf<String>()
     private val transaction_times = mutableListOf<String>()
 
     var drawerLayout: DrawerLayout? = null
@@ -331,15 +395,16 @@ class AddToBlockFragment : Fragment(), NavigationView.OnNavigationItemSelectedLi
             feeses,
             verifies,
             ids,
+            signatures,
             transaction_times
         )
         recyclerView.adapter = adapterClass
 
-        //statusSelected("Unrecognized", "Verified", "Unrecognized",
-        //    "Verified", "Unrecognized", "Verified")
+        statusSelected("Unrecognized", "Verified", "Unrecognized",
+            "Verified", "Unrecognized", "Verified")
 
-        statusSelected("Unrecognized", "Verified", "Not Verified",
-            "In Processing...", "Temporary Blocked", "Blocked")
+        //  statusSelected("Unrecognized", "Verified", "Not Verified",
+        //   "In Processing...", "Temporary Blocked", "Blocked")
 
         statusText = view.findViewById(R.id.status_text)
         statusCard = view.findViewById(R.id.status_card)
@@ -408,6 +473,7 @@ class AddToBlockFragment : Fragment(), NavigationView.OnNavigationItemSelectedLi
                 feeses.clear()
                 verifies.clear()
                 ids.clear()
+                signatures.clear()
                 transaction_times.clear()
 
                 for (dataSnapshot in snapshot.children) {
@@ -420,6 +486,7 @@ class AddToBlockFragment : Fragment(), NavigationView.OnNavigationItemSelectedLi
                         val receiver = dataSnapshot.child("Receiver").value.toString()
                         val amount = dataSnapshot.child("Amount").value.toString()
                         val fees = dataSnapshot.child("Fees").value.toString()
+                        val signature = dataSnapshot.child("Signature").value.toString()
                         val transaction_time =
                             dataSnapshot.child("Transaction_Time").value.toString()
                         val id = dataSnapshot.child("Transaction_ID").value.toString()
@@ -430,6 +497,7 @@ class AddToBlockFragment : Fragment(), NavigationView.OnNavigationItemSelectedLi
                         feeses.add(fees)
                         verifies.add(verify)
                         ids.add(id)
+                        signatures.add(signature)
                         transaction_times.add(transaction_time)
                     }
                 }
@@ -443,29 +511,38 @@ class AddToBlockFragment : Fragment(), NavigationView.OnNavigationItemSelectedLi
     override fun onNavigationItemSelected(item: MenuItem): Boolean {
         when (item.itemId) {
             R.id.block_queue -> {
-                val intent2 = Intent(requireContext(), BlockQueueActivity::class.java)
-                startActivity(intent2)
-            }
-            R.id.blockchain -> {
-                val intent2 = Intent(requireContext(), BlockchainActivity::class.java)
-                startActivity(intent2)
-            }
-            R.id.transaction -> {
-                val intent = Intent(requireContext(), MinerTransactionActivity::class.java)
+                val intent = Intent(requireContext(), BlockQueueActivity::class.java)
                 startActivity(intent)
             }
-            R.id.account -> {
-                val intent = Intent(requireContext(), AccountActivity::class.java)
+            R.id.blockchain -> {
+                val intent = Intent(requireContext(), BlockchainActivity::class.java)
+                startActivity(intent)
+            }
+            R.id.transaction -> {
+                val intent = Intent(requireContext(), TransactionDetailsActivity::class.java)
+                startActivity(intent)
+            }
+            R.id.rejected -> {
+                val intent = Intent(requireContext(), RejectedBlocksActivity::class.java)
                 startActivity(intent)
             }
             R.id.notifications -> {
                 val intent = Intent(requireContext(), NotificationActivity::class.java)
                 startActivity(intent)
             }
+            R.id.account -> {
+                val intent = Intent(requireContext(), AccountActivity::class.java)
+                startActivity(intent)
+            }
             R.id.logout -> {
+                val sharedPrefs = context?.getSharedPreferences(SignInActivity.PREFS_NAME, Context.MODE_PRIVATE)
+                val editor = sharedPrefs?.edit()
+                editor?.putBoolean("hasSignedIn", false)
+                editor?.apply()
+
                 val intent = Intent(requireContext(), SignInActivity::class.java)
                 startActivity(intent)
-                requireActivity().finish()
+                requireActivity().finish() // Finish the current activity
             }
         }
         return true

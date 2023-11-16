@@ -38,6 +38,7 @@ class MineBlockAdapter(
     private val amounts: List<String>,
     private val feeses: List<String>,
     private val ids: List<String>,
+    private val signatures: List<String>,
     private val transaction_times: List<String>,
 ) : RecyclerView.Adapter<MineBlockAdapter.MyViewHolder>() {
 
@@ -99,6 +100,7 @@ class MineFragment : Fragment(), NavigationView.OnNavigationItemSelectedListener
     private val amounts = mutableListOf<String>()
     private val feeses = mutableListOf<String>()
     private val ids = mutableListOf<String>()
+    private val signatures = mutableListOf<String>()
     private val transaction_times = mutableListOf<String>()
 
     var drawerLayout: DrawerLayout? = null
@@ -154,6 +156,7 @@ class MineFragment : Fragment(), NavigationView.OnNavigationItemSelectedListener
             amounts,
             feeses,
             ids,
+            signatures,
             transaction_times
         )
         recyclerView.adapter = adapterClass
@@ -309,6 +312,66 @@ class MineFragment : Fragment(), NavigationView.OnNavigationItemSelectedListener
                                                         .child(previousBlockID.toString())
                                                         .setValue(dataSnapshot.child(previousBlockID.toString()).value)
 
+                                                    val databaseReference = FirebaseDatabase.getInstance()
+                                                        .getReference("miners")
+                                                        .child(phone)
+                                                        .child("main_blockchain")
+                                                        .child(previousBlockID.toString())
+                                                        .child("transaction_details")
+
+                                                    databaseReference.addListenerForSingleValueEvent(object : ValueEventListener {
+                                                        override fun onDataChange(dataSnapshot: DataSnapshot) {
+                                                            for (transactionSnapshot in dataSnapshot.children) {
+
+                                                                val transactionID = transactionSnapshot.key
+                                                                val amount = transactionSnapshot.child("Amount").value.toString()
+                                                                val fees = transactionSnapshot.child("Fees").value.toString()
+                                                                val receiver = transactionSnapshot.child("Receiver").value.toString()
+
+                                                                val receiverBalanceRef = FirebaseDatabase.getInstance()
+                                                                    .getReference("miners")
+                                                                    .child(receiver)
+                                                                    .child("Balance")
+
+                                                                receiverBalanceRef.addListenerForSingleValueEvent(object : ValueEventListener {
+                                                                    override fun onDataChange(dataSnapshot: DataSnapshot) {
+                                                                        val prevBalance = dataSnapshot.getValue().toString()
+                                                                        val new_balance = prevBalance.toFloat() + amount.toFloat()
+                                                                        receiverBalanceRef.setValue(new_balance.toString())
+                                                                    }
+
+                                                                    override fun onCancelled(databaseError: DatabaseError) {
+
+                                                                    }
+                                                                })
+
+                                                                val previousMinerBalanceRef = FirebaseDatabase.getInstance()
+                                                                    .getReference("miners")
+                                                                    .child(previousMiner.toString())
+                                                                    .child("Balance")
+
+                                                                previousMinerBalanceRef.addListenerForSingleValueEvent(object : ValueEventListener {
+                                                                    override fun onDataChange(dataSnapshot: DataSnapshot) {
+
+                                                                        val prevBalance = dataSnapshot.getValue().toString()
+                                                                        val new_balance = prevBalance.toFloat() + amount.toFloat()
+                                                                        previousMinerBalanceRef.setValue(new_balance.toString() )
+                                                                    }
+
+                                                                    override fun onCancelled(databaseError: DatabaseError) {
+                                                                         
+                                                                    }
+                                                                })
+
+                                                            }
+                                                        }
+
+                                                        override fun onCancelled(databaseError: DatabaseError) {
+                                                            // Handle potential errors here
+                                                        }
+                                                    })
+
+
                                                     FirebaseDatabase.getInstance()
                                                         .getReference("miners")
                                                         .child(phone).child("block_queue")
@@ -325,6 +388,7 @@ class MineFragment : Fragment(), NavigationView.OnNavigationItemSelectedListener
                                                                             .getReference("miners")
                                                                             .child(phone)
                                                                             .child("rejected_blocks")
+                                                                            .child(ID.toString())
                                                                             .setValue(dataSnapshot.child(ID.toString()).value)
 
                                                                         FirebaseDatabase.getInstance()
@@ -405,6 +469,10 @@ class MineFragment : Fragment(), NavigationView.OnNavigationItemSelectedListener
                                         .setValue(amounts[ids.indexOf(idValue)])
                                     blockRef.child(transactionId).child("Fees")
                                         .setValue(feeses[ids.indexOf(idValue)])
+                                    blockRef.child(transactionId).child("Signature")
+                                        .setValue(signatures[ids.indexOf(idValue)])
+                                    blockRef.child(transactionId).child("Transaction_Time")
+                                        .setValue(transaction_times[ids.indexOf(idValue)])
                                     blockRef.child(transactionId).child("Status")
                                         .setValue("Unrecognized")
 
@@ -482,6 +550,7 @@ class MineFragment : Fragment(), NavigationView.OnNavigationItemSelectedListener
                 amounts.clear()
                 feeses.clear()
                 ids.clear()
+                signatures.clear()
                 transaction_times.clear()
 
                 for (dataSnapshot in snapshot.children) {
@@ -492,12 +561,14 @@ class MineFragment : Fragment(), NavigationView.OnNavigationItemSelectedListener
                     val verify = dataSnapshot.child("Status").value.toString()
                     val transaction_time = dataSnapshot.child("Transaction_Time").value.toString()
                     val id = dataSnapshot.child("Transaction_ID").value.toString()
+                    val signature = dataSnapshot.child("Signature").value.toString()
 
                     senders.add(sender)
                     receivers.add(receiver)
                     amounts.add(amount)
                     feeses.add(fees)
                     ids.add(id)
+                    signatures.add(signature)
                     transaction_times.add(transaction_time)
                 }
                 adapterClass.notifyDataSetChanged()
@@ -578,17 +649,38 @@ class MineFragment : Fragment(), NavigationView.OnNavigationItemSelectedListener
     override fun onNavigationItemSelected(item: MenuItem): Boolean {
         when (item.itemId) {
             R.id.block_queue -> {
-                val intent2 = Intent(requireContext(), BlockQueueActivity::class.java)
-                startActivity(intent2)
+                val intent = Intent(requireContext(), BlockQueueActivity::class.java)
+                startActivity(intent)
             }
             R.id.blockchain -> {
-                val intent2 = Intent(requireContext(), BlockchainActivity::class.java)
-                startActivity(intent2)
+                val intent = Intent(requireContext(), BlockchainActivity::class.java)
+                startActivity(intent)
+            }
+            R.id.transaction -> {
+                val intent = Intent(requireContext(), TransactionDetailsActivity::class.java)
+                startActivity(intent)
+            }
+            R.id.rejected -> {
+                val intent = Intent(requireContext(), RejectedBlocksActivity::class.java)
+                startActivity(intent)
+            }
+            R.id.notifications -> {
+                val intent = Intent(requireContext(), NotificationActivity::class.java)
+                startActivity(intent)
+            }
+            R.id.account -> {
+                val intent = Intent(requireContext(), AccountActivity::class.java)
+                startActivity(intent)
             }
             R.id.logout -> {
+                val sharedPrefs = context?.getSharedPreferences(SignInActivity.PREFS_NAME, Context.MODE_PRIVATE)
+                val editor = sharedPrefs?.edit()
+                editor?.putBoolean("hasSignedIn", false)
+                editor?.apply()
+
                 val intent = Intent(requireContext(), SignInActivity::class.java)
                 startActivity(intent)
-                requireActivity().finish()
+                requireActivity().finish() // Finish the current activity
             }
         }
         return true

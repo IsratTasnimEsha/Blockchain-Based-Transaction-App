@@ -28,6 +28,7 @@ class BlockDetailsAdapter(
     private val feeses: List<String>,
     private val verifies: List<String>,
     private val ids: List<String>,
+    private val signatures: List<String>,
     private val transaction_times: List<String>,
     private val st_id: String,
 
@@ -48,6 +49,7 @@ class BlockDetailsAdapter(
         holder.fees.text = "${feeses[position]}"
         holder.verify.text = "${verifies[position]}"
         val idValue = ids[position]
+        val signatureValue = signatures[position]
 
         if(verifies[position] == "Unrecognized") {
             holder.verify_button.isEnabled = true
@@ -131,6 +133,7 @@ class BlockDetailsActivity : AppCompatActivity() {
     private val feeses = mutableListOf<String>()
     private val verifies = mutableListOf<String>()
     private val ids = mutableListOf<String>()
+    private val signatures = mutableListOf<String>()
     private val transaction_times = mutableListOf<String>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -170,6 +173,7 @@ class BlockDetailsActivity : AppCompatActivity() {
             feeses,
             verifies,
             ids,
+            signatures,
             transaction_times,
             st_id
         )
@@ -183,6 +187,7 @@ class BlockDetailsActivity : AppCompatActivity() {
                 feeses.clear()
                 verifies.clear()
                 ids.clear()
+                signatures.clear()
                 transaction_times.clear()
 
                 for (dataSnapshot in snapshot.children) {
@@ -193,6 +198,7 @@ class BlockDetailsActivity : AppCompatActivity() {
                     val verify = dataSnapshot.child("Status").value.toString()
                     val transaction_time = dataSnapshot.child("Transaction_Time").value.toString()
                     val id = dataSnapshot.child("Transaction_ID").value.toString()
+                    val signature = dataSnapshot.child("Signature").value.toString()
 
                     senders.add(sender)
                     receivers.add(receiver)
@@ -200,6 +206,7 @@ class BlockDetailsActivity : AppCompatActivity() {
                     feeses.add(fees)
                     verifies.add(verify)
                     ids.add(id)
+                    signatures.add(signature)
                     transaction_times.add(transaction_time)
                 }
                 adapterClass.notifyDataSetChanged()

@@ -94,7 +94,7 @@
                         android:drawableRight="@drawable/baseline_expand_more_24"
                         android:gravity="center"
                         android:padding="5dp"
-                        android:text="All Transactions"
+                        android:text="Unblocked"
                         android:textSize="12dp"
                         android:textStyle="bold" />
                 </androidx.cardview.widget.CardView>

@@ -5,6 +5,7 @@ import android.content.Intent
 import android.content.SharedPreferences
 import android.os.Build
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.MenuItem
 import android.view.View
@@ -43,7 +44,7 @@ class AddTransactionFragment : Fragment(), NavigationView.OnNavigationItemSelect
     private lateinit var st_phone: String
     private lateinit var sharedPreferences: SharedPreferences
     private lateinit var databaseReference: DatabaseReference
-
+    private lateinit var senderPrivateKey: String
     var drawerLayout: DrawerLayout? = null
     var navigationView: NavigationView? = null
     var nView: View? = null
@@ -52,7 +53,7 @@ class AddTransactionFragment : Fragment(), NavigationView.OnNavigationItemSelect
     var phone: TextView? = null
     var photo: ImageView? = null
     var home_menu: ImageView? = null
-
+    private lateinit var formattedDateTime: String
     @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -122,14 +123,25 @@ class AddTransactionFragment : Fragment(), NavigationView.OnNavigationItemSelect
         val sharedPreferences = requireContext().getSharedPreferences("MySharedPref", Context.MODE_PRIVATE)
         val st_phone = sharedPreferences.getString("Phone", "") ?: ""
 
+
+
         databaseReference.child("miners").child(st_phone)
             .addListenerForSingleValueEvent(object : ValueEventListener {
+                @RequiresApi(Build.VERSION_CODES.O)
                 override fun onDataChange(snapshot: DataSnapshot) {
-                    if (snapshot.child("Signature").exists()) {
-                        val signature = snapshot.child("Signature").value.toString()
+                    if (snapshot.child("Private_Key").exists()) {
+                        senderPrivateKey = snapshot.child("Private_Key").value.toString()
+                        val st_receiver = receiverField.text.toString()
+                        val st_amount = amountField.text.toString()
+                        val st_fees = feesField.text.toString()
+                        formattedDateTime = getFormattedDateTime()
+                        val st_transactionData = "$st_receiver$st_amount$st_fees$formattedDateTime"
+
+                        val signature = Base64.getEncoder().encodeToString(createSignature(senderPrivateKey, st_transactionData))
                         signatureField.setText(signature)
+                        Toast.makeText(requireContext(), "Private key retrieved successfully.", Toast.LENGTH_SHORT).show()
                     } else {
-                        Toast.makeText(requireContext(), "No signature found for the user.", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(requireContext(), "No private key found for the user.", Toast.LENGTH_SHORT).show()
                     }
                 }
 
@@ -149,9 +161,7 @@ class AddTransactionFragment : Fragment(), NavigationView.OnNavigationItemSelect
         val st_fees = feesField.text.toString().toDoubleOrNull() ?: 0.0
         val st_signature = signatureField.text.toString()
         val unrecognized: String = "Unrecognized"
-        val currentDateTime = LocalDateTime.now()
-        val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
-        val formattedDateTime = currentDateTime.format(formatter)
+
 
         if (st_receiver.isEmpty() || st_amount == 0.0 || st_fees == 0.0 || st_signature.isEmpty()) {
             Toast.makeText(requireContext(), "Please fill in all fields.", Toast.LENGTH_SHORT).show()
@@ -212,7 +222,7 @@ class AddTransactionFragment : Fragment(), NavigationView.OnNavigationItemSelect
                     val phone = childSnapshot.key
 
                     if (phone != null) {
-                        senderRef.child(phone).child("Balance").setValue(newBalance)
+                        senderRef.child(st_phone).child("Balance").setValue(newBalance)
 
                         val newTransactionRef = senderRef.child(phone).child("transactions").child(transactionKey!!)
                         val refString = newTransactionRef.key
@@ -224,7 +234,7 @@ class AddTransactionFragment : Fragment(), NavigationView.OnNavigationItemSelect
                             child("Sender").setValue(st_phone)
                             child("Signature").setValue(signature)
                             child("Transaction_ID").setValue(refString.toString())
-                            newTransactionRef.child("Transaction_Time").setValue(formattedDateTime.toString())
+                            newTransactionRef.child("Transaction_Time").setValue(formattedDateTime)
                             child("Status").setValue("Unrecognized")
 
                             Toast.makeText(requireContext(), "The Transaction Has Occurred.", Toast.LENGTH_SHORT).show()
@@ -247,6 +257,8 @@ class AddTransactionFragment : Fragment(), NavigationView.OnNavigationItemSelect
     @RequiresApi(Build.VERSION_CODES.O)
     private fun createSignature(senderPrivateKey: String, dataToSign: String): ByteArray {
         val privateBytes = Base64.getDecoder().decode(senderPrivateKey)
+        Log.d("SignatureVerification", "data: $dataToSign")
+
         val privateKey = KeyFactory.getInstance("RSA").generatePrivate(PKCS8EncodedKeySpec(privateBytes))
 
         val signature = Signature.getInstance("SHA256withRSA")
@@ -254,6 +266,12 @@ class AddTransactionFragment : Fragment(), NavigationView.OnNavigationItemSelect
         signature.update(dataToSign.toByteArray())
 
         return signature.sign()
+    }
+    @RequiresApi(Build.VERSION_CODES.O)
+    private fun getFormattedDateTime(): String {
+        val currentDateTime = LocalDateTime.now()
+        val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
+        return currentDateTime.format(formatter)
     }
 
     override fun onNavigationItemSelected(item: MenuItem): Boolean {
@@ -266,12 +284,20 @@ class AddTransactionFragment : Fragment(), NavigationView.OnNavigationItemSelect
                 val intent = Intent(requireContext(), BlockchainActivity::class.java)
                 startActivity(intent)
             }
-            R.id.account -> {
-                val intent = Intent(requireContext(), AccountActivity::class.java)
+            R.id.transaction -> {
+                val intent = Intent(requireContext(), TransactionDetailsActivity::class.java)
+                startActivity(intent)
+            }
+            R.id.rejected -> {
+                val intent = Intent(requireContext(), RejectedBlocksActivity::class.java)
                 startActivity(intent)
             }
             R.id.notifications -> {
                 val intent = Intent(requireContext(), NotificationActivity::class.java)
+                startActivity(intent)
+            }
+            R.id.account -> {
+                val intent = Intent(requireContext(), AccountActivity::class.java)
                 startActivity(intent)
             }
             R.id.logout -> {

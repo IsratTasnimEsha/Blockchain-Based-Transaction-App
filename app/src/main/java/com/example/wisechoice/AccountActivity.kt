@@ -15,6 +15,7 @@ import com.google.firebase.database.ValueEventListener
 class AccountActivity : AppCompatActivity() {
     var name: EditText? = null
     var phone: TextView? = null
+    var balance: TextView? = null
     var p_old: EditText? = null
     var p_new:EditText? = null
     var p_confirm:EditText? = null
@@ -25,6 +26,7 @@ class AccountActivity : AppCompatActivity() {
         setContentView(R.layout.activity_account)
 
         name = findViewById<EditText>(R.id.name)
+        balance = findViewById<EditText>(R.id.balance)
         phone = findViewById<TextView>(R.id.phone)
         p_old = findViewById(R.id.p_old)
         p_new = findViewById(R.id.p_new)
@@ -40,6 +42,8 @@ class AccountActivity : AppCompatActivity() {
                     name?.setText(str_uname)
                     val str_phone = snapshot.child("Phone").value as String?
                     phone?.setText(str_phone)
+                    val str_balance = snapshot.child("Balance").value
+                    balance?.setText(str_balance.toString())
                 }
 
                 override fun onCancelled(error: DatabaseError) {}
@@ -64,7 +68,7 @@ class AccountActivity : AppCompatActivity() {
                             Toast.LENGTH_SHORT
                         ).show()
                     } else {
-                        //if (st_new.length < 6) {
+                        // if (st_new.length < 6) {
                         //    p_new!!.error = "Password Must Be At Least 6 Characters."
                         //    Toast.makeText(
                         //        this@AccountActivity,

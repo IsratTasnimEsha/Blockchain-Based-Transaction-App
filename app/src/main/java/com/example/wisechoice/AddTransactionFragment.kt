@@ -38,8 +38,8 @@ class AddTransactionFragment : Fragment(), NavigationView.OnNavigationItemSelect
     private lateinit var receiverField: EditText
     private lateinit var amountField: EditText
     private lateinit var feesField: EditText
-    private lateinit var transact: Button
-    private lateinit var signatureField: EditText
+
+
     private lateinit var signatureButton: Button
     private lateinit var st_phone: String
     private lateinit var sharedPreferences: SharedPreferences
@@ -102,8 +102,8 @@ class AddTransactionFragment : Fragment(), NavigationView.OnNavigationItemSelect
         receiverField = view.findViewById(R.id.receiver)
         amountField = view.findViewById(R.id.amount)
         feesField = view.findViewById(R.id.fees)
-        transact = view.findViewById(R.id.transact)
-        signatureField = view.findViewById(R.id.signatureField)
+
+
         signatureButton = view.findViewById(R.id.signatureButton)
 
         databaseReference = FirebaseDatabase.getInstance().getReference()
@@ -112,9 +112,6 @@ class AddTransactionFragment : Fragment(), NavigationView.OnNavigationItemSelect
             fetchSignatureFromFirebase()
         }
 
-        transact.setOnClickListener {
-            performTransaction()
-        }
 
         return view
     }
@@ -138,8 +135,11 @@ class AddTransactionFragment : Fragment(), NavigationView.OnNavigationItemSelect
                         val st_transactionData = "$st_receiver$st_amount$st_fees$formattedDateTime"
 
                         val signature = Base64.getEncoder().encodeToString(createSignature(senderPrivateKey, st_transactionData))
-                        signatureField.setText(signature)
-                        Toast.makeText(requireContext(), "Private key retrieved successfully.", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(requireContext(), "Signature created successfully.", Toast.LENGTH_SHORT).show()
+                        performTransaction(signature)
+
+
+
                     } else {
                         Toast.makeText(requireContext(), "No private key found for the user.", Toast.LENGTH_SHORT).show()
                     }
@@ -152,14 +152,14 @@ class AddTransactionFragment : Fragment(), NavigationView.OnNavigationItemSelect
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
-    private fun performTransaction() {
+    private fun performTransaction(signature :String) {
         val sharedPreferences = requireContext().getSharedPreferences("MySharedPref", Context.MODE_PRIVATE)
         val st_phone = sharedPreferences.getString("Phone", "") ?: ""
 
         val st_receiver = receiverField.text.toString()
         val st_amount = amountField.text.toString().toDoubleOrNull() ?: 0.0
         val st_fees = feesField.text.toString().toDoubleOrNull() ?: 0.0
-        val st_signature = signatureField.text.toString()
+        val st_signature = signature
         val unrecognized: String = "Unrecognized"
 
 
@@ -251,7 +251,7 @@ class AddTransactionFragment : Fragment(), NavigationView.OnNavigationItemSelect
         receiverField.text.clear()
         amountField.text.clear()
         feesField.text.clear()
-        signatureField.text.clear()
+
     }
 
     @RequiresApi(Build.VERSION_CODES.O)

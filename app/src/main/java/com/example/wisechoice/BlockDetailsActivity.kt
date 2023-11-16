@@ -81,6 +81,16 @@ class BlockDetailsAdapter(
                 holder.verify_button.isEnabled = true
                 holder.transaction_card.setBackgroundColor(ContextCompat.getColor(context, R.color.green))
             }
+
+            else {
+                val newTransactionRef = databaseReference.child("miners").child(st_phone)
+                    .child("block_queue").child(st_id).child("transaction_details").child(idValue)
+                newTransactionRef.child("Status").setValue("Not Verified")
+
+                holder.verify.text = "Not Verified"
+                holder.verify_button.isEnabled = false
+                holder.transaction_card.setBackgroundColor(ContextCompat.getColor(context, R.color.dark_green))
+            }
         }
 
         holder.transaction_card.setOnClickListener {
@@ -249,6 +259,7 @@ class BlockDetailsActivity : AppCompatActivity() {
                     minedTextView.text = minedTime
 
                     acceptButton.setOnClickListener {
+
                         val blockchainReference = FirebaseDatabase.getInstance().getReference("miners")
                             .child(st_phone).child("blockchain").child(st_id)
 
@@ -260,13 +271,46 @@ class BlockDetailsActivity : AppCompatActivity() {
                             .addListenerForSingleValueEvent(object : ValueEventListener {
                                 override fun onDataChange(snapshot: DataSnapshot) {
                                     if (snapshot.exists()) {
-                                        FirebaseDatabase.getInstance().getReference("miners").child(st_phone)
-                                            .child("blockchain").child(st_id).removeValue()
+                                        val transactionDetailsSnapshot = snapshot.child("transaction_details")
 
-                                        blockchainReference.setValue(snapshot.value)
+                                        val allVerified = transactionDetailsSnapshot.children.all { transactionSnapshot ->
+                                            transactionSnapshot.child("Status").getValue(String::class.java) == "Verified"
+                                        }
 
-                                        FirebaseDatabase.getInstance().getReference("miners").child(st_phone)
-                                            .child("block_queue").removeValue()
+                                        val anyNotVerified = transactionDetailsSnapshot.children.any { transactionSnapshot ->
+                                            transactionSnapshot.child("Status").getValue(String::class.java) == "Not Verified"
+                                        }
+
+                                        if(anyNotVerified) {
+                                            Toast.makeText(
+                                                this@BlockDetailsActivity,
+                                                "Corrupted Block Can't Be Added To Blockchain."
+                                                        + "Please Try Another Block From Block Queue",
+                                                Toast.LENGTH_SHORT
+                                            ).show()
+
+                                            acceptButton.isEnabled = false
+                                        }
+
+                                        else if (allVerified) {
+                                            FirebaseDatabase.getInstance().getReference("miners")
+                                                .child(st_phone)
+                                                .child("blockchain").child(st_id).removeValue()
+
+                                            blockchainReference.setValue(snapshot.value)
+
+                                            FirebaseDatabase.getInstance().getReference("miners")
+                                                .child(st_phone)
+                                                .child("block_queue").removeValue()
+                                        }
+
+                                        else {
+                                            Toast.makeText(
+                                                this@BlockDetailsActivity,
+                                                "Please Make Sure That All Transactions Have Been Verified.",
+                                                Toast.LENGTH_SHORT
+                                            ).show()
+                                        }
                                     }
                                 }
 

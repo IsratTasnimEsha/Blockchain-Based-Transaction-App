@@ -105,7 +105,7 @@
             <androidx.cardview.widget.CardView
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_weight="1"
+                android:layout_weight="140"
                 android:layout_marginBottom="10dp"
                 android:layout_marginRight="5dp"
                 app:cardCornerRadius="8dp">
@@ -115,8 +115,8 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:background="@color/dark_blue"
-                    android:text="ADD SIGNATURE"
                     android:padding="5dp"
+                    android:text="Transaction"
                     android:textColor="@color/white" />
             </androidx.cardview.widget.CardView>
 
@@ -125,38 +125,13 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="2"
                 android:layout_marginBottom="10dp"
-                app:cardCornerRadius="8dp">
-
-                <EditText
-                    android:id="@+id/signatureField"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:background="@color/transparent"
-                    android:drawableLeft="@drawable/baseline_attach_money_24"
-                    android:drawablePadding="5dp"
-                    android:ems="10"
-                    android:enabled="false"
-                    android:hint="Signature"
-                    android:inputType="number"
-                    android:minHeight="48dp"
-                    android:padding="5dp" />
-
-            </androidx.cardview.widget.CardView>
+                app:cardCornerRadius="8dp"/>
         </LinearLayout>
 
         <androidx.cardview.widget.CardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            app:cardCornerRadius="8dp">
-
-            <Button
-                android:id="@+id/transact"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:background="@color/dark_blue"
-                android:text="TRANSACT"
-                android:textColor="@color/white" />
-        </androidx.cardview.widget.CardView>
+            app:cardCornerRadius="8dp"/>
     </LinearLayout>
 
     <com.google.android.material.navigation.NavigationView

@@ -199,7 +199,17 @@ class TempBlockAdapter(
                             holder.verify_button.text = "Add To Block"
                             holder.verify_button.isEnabled = true
                             holder.transaction_card.setBackgroundColor(ContextCompat.getColor(context, R.color.green))
+                        }
 
+                        else {
+                            val newTransactionRef = databaseReference.child("miners").child(st_phone)
+                                .child("transactions").child(idValue)
+                            newTransactionRef.child("Status").setValue("Not Verified")
+
+                            holder.verify.text = "Not Verified"
+                            holder.verify_button.text = "Denied"
+                            holder.verify_button.isEnabled = false
+                            holder.transaction_card.setBackgroundColor(ContextCompat.getColor(context, R.color.dark_green))
                         }
                     }
 
@@ -519,7 +529,7 @@ class AddToBlockFragment : Fragment(), NavigationView.OnNavigationItemSelectedLi
                 startActivity(intent)
             }
             R.id.transaction -> {
-                val intent = Intent(requireContext(), TransactionDetailsActivity::class.java)
+                val intent = Intent(requireContext(), MinerTransactionActivity::class.java)
                 startActivity(intent)
             }
             R.id.rejected -> {

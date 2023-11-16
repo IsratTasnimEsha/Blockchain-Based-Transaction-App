@@ -287,7 +287,7 @@ class BlockQueueActivity : AppCompatActivity() , NavigationView.OnNavigationItem
                 startActivity(intent)
             }
             R.id.transaction -> {
-                val intent = Intent(this, TransactionDetailsActivity::class.java)
+                val intent = Intent(this, MinerTransactionActivity::class.java)
                 startActivity(intent)
             }
             R.id.rejected -> {

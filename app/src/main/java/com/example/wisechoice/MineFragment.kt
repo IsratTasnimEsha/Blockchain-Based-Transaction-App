@@ -384,12 +384,23 @@ class MineFragment : Fragment(), NavigationView.OnNavigationItemSelectedListener
                                                                         childSnapshot.child("Previous_Hash").value
 
                                                                     if (blockHash == prevPreviousHash) {
-                                                                        FirebaseDatabase.getInstance()
-                                                                            .getReference("miners")
-                                                                            .child(phone)
-                                                                            .child("rejected_blocks")
-                                                                            .child(ID.toString())
-                                                                            .setValue(dataSnapshot.child(ID.toString()).value)
+                                                                        if(ID.toString() != previousBlockID.toString()) {
+                                                                            FirebaseDatabase.getInstance()
+                                                                                .getReference("miners")
+                                                                                .child(st_phone)
+                                                                                .child("rejected_blocks")
+                                                                                .child(ID.toString())
+                                                                                .setValue(dataSnapshot.child(ID.toString()).value)
+                                                                        }
+
+                                                                        if(ID.toString() != previousBlockID.toString()) {
+                                                                            FirebaseDatabase.getInstance()
+                                                                                .getReference("miners")
+                                                                                .child(phone)
+                                                                                .child("rejected_blocks")
+                                                                                .child(ID.toString())
+                                                                                .setValue(dataSnapshot.child(ID.toString()).value)
+                                                                        }
 
                                                                         FirebaseDatabase.getInstance()
                                                                             .getReference("miners")
@@ -657,7 +668,7 @@ class MineFragment : Fragment(), NavigationView.OnNavigationItemSelectedListener
                 startActivity(intent)
             }
             R.id.transaction -> {
-                val intent = Intent(requireContext(), TransactionDetailsActivity::class.java)
+                val intent = Intent(requireContext(), MinerTransactionActivity::class.java)
                 startActivity(intent)
             }
             R.id.rejected -> {

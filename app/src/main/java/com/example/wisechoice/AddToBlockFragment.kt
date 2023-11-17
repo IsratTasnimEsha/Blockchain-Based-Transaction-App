@@ -265,10 +265,6 @@ class TempBlockAdapter(
                         blockTransactionDetails.children.forEach { transactionSnapshot ->
                             val transactionKey = transactionSnapshot.key
 
-                            val st_status = blockTransactionDetails.child(transactionKey.toString())
-                                .child("Status").getValue().toString()
-
-                            if(st_status != "Blocked") {
                                 FirebaseDatabase.getInstance()
                                     .getReference("miners")
                                     .child(st_phone)
@@ -291,7 +287,7 @@ class TempBlockAdapter(
                                     .child(transactionKey.toString())
                                     .child("Block_No")
                                     .setValue(blockKey.toString())
-                            }
+
                         }
                     }
                 }

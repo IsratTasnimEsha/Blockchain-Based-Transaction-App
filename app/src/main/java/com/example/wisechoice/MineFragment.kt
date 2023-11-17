@@ -230,6 +230,7 @@ class MineFragment : Fragment(), NavigationView.OnNavigationItemSelectedListener
 
                                     val previousBlockID = childSnapshot.key
                                     val previousMiner = childSnapshot.child("Miner").value
+                                    val previousTotalFees = childSnapshot.child("Total_Fees").value
                                     val previousHash = childSnapshot.child("Block_Hash").value
                                     val prevPreviousHash = childSnapshot.child("Previous_Hash").value
 
@@ -325,13 +326,12 @@ class MineFragment : Fragment(), NavigationView.OnNavigationItemSelectedListener
 
                                                                 val transactionID = transactionSnapshot.key
                                                                 val amount = transactionSnapshot.child("Amount").value.toString()
-                                                                val fees = transactionSnapshot.child("Fees").value.toString()
                                                                 val receiver = transactionSnapshot.child("Receiver").value.toString()
 
                                                                 val receiverBalanceRef = FirebaseDatabase.getInstance()
                                                                     .getReference("miners")
-                                                                    .child(receiver)
-                                                                    .child("Balance")
+                                                                    .child(phone)
+                                                                    .child("Users_Balance").child(receiver)
 
                                                                 receiverBalanceRef.addListenerForSingleValueEvent(object : ValueEventListener {
                                                                     override fun onDataChange(dataSnapshot: DataSnapshot) {
@@ -347,14 +347,15 @@ class MineFragment : Fragment(), NavigationView.OnNavigationItemSelectedListener
 
                                                                 val previousMinerBalanceRef = FirebaseDatabase.getInstance()
                                                                     .getReference("miners")
-                                                                    .child(previousMiner.toString())
-                                                                    .child("Balance")
+                                                                    .child(phone)
+                                                                    .child("Users_Balance").child(previousMiner.toString())
 
                                                                 previousMinerBalanceRef.addListenerForSingleValueEvent(object : ValueEventListener {
                                                                     override fun onDataChange(dataSnapshot: DataSnapshot) {
 
                                                                         val prevBalance = dataSnapshot.getValue().toString()
-                                                                        val new_balance = prevBalance.toFloat() + amount.toFloat()
+                                                                        val new_balance = prevBalance.toFloat() +
+                                                                                previousTotalFees.toString().toFloat()
                                                                         previousMinerBalanceRef.setValue(new_balance.toString() )
                                                                     }
 
@@ -606,10 +607,6 @@ class MineFragment : Fragment(), NavigationView.OnNavigationItemSelectedListener
                         blockTransactionDetails.children.forEach { transactionSnapshot ->
                             val transactionKey = transactionSnapshot.key
 
-                            val st_status = blockTransactionDetails.child(transactionKey.toString())
-                                .child("Status").getValue().toString()
-
-                            if(st_status != "Blocked") {
 
                                 FirebaseDatabase.getInstance()
                                     .getReference("miners")
@@ -633,7 +630,7 @@ class MineFragment : Fragment(), NavigationView.OnNavigationItemSelectedListener
                                     .child(transactionKey.toString())
                                     .child("Block_No")
                                     .setValue(blockKey.toString())
-                            }
+
                         }
                     }
                 }

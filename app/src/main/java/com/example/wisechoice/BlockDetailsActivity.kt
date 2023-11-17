@@ -2,14 +2,17 @@ package com.example.wisechoice
 
 import android.content.Context
 import android.content.Intent
+import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
 import android.widget.TextView
 import android.widget.Toast
+import androidx.annotation.RequiresApi
 import androidx.cardview.widget.CardView
 import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -19,6 +22,10 @@ import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
+import java.security.KeyFactory
+import java.security.Signature
+import java.security.spec.X509EncodedKeySpec
+import java.util.Base64
 
 class BlockDetailsAdapter(
     private val context: Context,
@@ -36,11 +43,50 @@ class BlockDetailsAdapter(
 
 ) : RecyclerView.Adapter<BlockDetailsAdapter.MyViewHolder>() {
 
+    private fun retrieveSenderPublicKey(senderPhone: String, callback: (String?) -> Unit) {
+        val databaseReference = FirebaseDatabase.getInstance().getReference("PublicKeys").child(senderPhone)
+
+        databaseReference.addListenerForSingleValueEvent(object : ValueEventListener {
+            override fun onDataChange(snapshot: DataSnapshot) {
+                val publicKey = snapshot.child("Public_Key").getValue(String::class.java)
+                callback(publicKey)
+            }
+
+            override fun onCancelled(error: DatabaseError) {
+                callback(null)
+            }
+        })
+    }
+    @RequiresApi(Build.VERSION_CODES.O)
+    private fun verifySignature(publicKey: String, signature: String, data: String): Boolean {
+        try {
+
+            Log.d("SignatureVerification", "Public Key: $publicKey")
+            Log.d("SignatureVerification", "Signature: $signature")
+            Log.d("SignatureVerification", "Data: $data")
+
+            val publicBytes = Base64.getDecoder().decode(publicKey)
+            val keySpec = X509EncodedKeySpec(publicBytes)
+            val keyFactory = KeyFactory.getInstance("RSA")
+            val public_key = keyFactory.generatePublic(keySpec)
+
+            val signatureBytes = Base64.getDecoder().decode(signature)
+            val signature = Signature.getInstance("SHA256withRSA")
+            signature.initVerify(public_key)
+            signature.update(data.toByteArray())
+
+            return signature.verify(signatureBytes)
+        } catch (e: Exception) {
+            e.printStackTrace()
+            return false
+        }
+    }
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): MyViewHolder {
         val view: View = LayoutInflater.from(context).inflate(R.layout.temp_block_xml, parent, false)
         return MyViewHolder(view)
     }
 
+    @RequiresApi(Build.VERSION_CODES.O)
     override fun onBindViewHolder(holder: MyViewHolder, position: Int) {
 
         holder.sender.text = "${senders[position]}"
@@ -50,6 +96,7 @@ class BlockDetailsAdapter(
         holder.verify.text = "${verifies[position]}"
         val idValue = ids[position]
         val signatureValue = signatures[position]
+        val timeval = transaction_times[position]
 
         if(verifies[position] == "Unrecognized") {
             holder.verify_button.isEnabled = true
@@ -73,23 +120,32 @@ class BlockDetailsAdapter(
             val st_phone = sharedPreferences.getString("Phone", "") ?: ""
 
             if(holder.verify.text == "Unrecognized") {
-                val newTransactionRef = databaseReference.child("miners").child(st_phone)
-                    .child("block_queue").child(st_id).child("transaction_details").child(idValue)
-                newTransactionRef.child("Status").setValue("Verified")
+                retrieveSenderPublicKey(senders[position]) { publicKey ->
+                    if (publicKey != null) {
+                        val signatureVerified = verifySignature(publicKey, signatures[position], "${receivers[position]}${amounts[position]}${feeses[position]}$timeval")
+                        if (signatureVerified) {
+                            Toast.makeText(context, "Signature Verified.\nSignature Algorithm: SHA256withRSA\nKey-Factory Algorithm: RSA", Toast.LENGTH_LONG).show()
 
-                holder.verify.text = "Verified"
-                holder.verify_button.isEnabled = true
-                holder.transaction_card.setBackgroundColor(ContextCompat.getColor(context, R.color.green))
-            }
+                            val newTransactionRef = databaseReference.child("miners").child(st_phone)
+                                .child("block_queue").child(st_id).child("transaction_details").child(idValue)
+                            newTransactionRef.child("Status").setValue("Verified")
 
-            else {
-                val newTransactionRef = databaseReference.child("miners").child(st_phone)
-                    .child("block_queue").child(st_id).child("transaction_details").child(idValue)
-                newTransactionRef.child("Status").setValue("Not Verified")
+                            holder.verify.text = "Verified"
+                            holder.verify_button.isEnabled = true
+                            holder.transaction_card.setBackgroundColor(ContextCompat.getColor(context, R.color.green))
+                        }
 
-                holder.verify.text = "Not Verified"
-                holder.verify_button.isEnabled = false
-                holder.transaction_card.setBackgroundColor(ContextCompat.getColor(context, R.color.dark_green))
+                        else {
+                            val newTransactionRef = databaseReference.child("miners").child(st_phone)
+                                .child("block_queue").child(st_id).child("transaction_details").child(idValue)
+                            newTransactionRef.child("Status").setValue("Not Verified")
+
+                            holder.verify.text = "Not Verified"
+                            holder.verify_button.isEnabled = true
+                            holder.transaction_card.setBackgroundColor(ContextCompat.getColor(context, R.color.dark_green))
+                        }
+                    }
+                }
             }
         }
 
@@ -152,14 +208,14 @@ class BlockDetailsActivity : AppCompatActivity() {
 
         blockIDTextView = findViewById(R.id.block_id)
         blockHashTextView = findViewById(R.id.block_hash)
-        previousHashTextView= findViewById(R.id.previous_hash)
-        nonceTextView= findViewById(R.id.nonce)
-        minerTextView= findViewById(R.id.miner)
-        noOfTransactionsTextView= findViewById(R.id.no_of_transactions)
-        totalSentTextView= findViewById(R.id.total_sent)
-        sizeTextView= findViewById(R.id.size)
-        totalFeesTextView= findViewById(R.id.total_fees)
-        minedTextView= findViewById(R.id.mined)
+        previousHashTextView = findViewById(R.id.previous_hash)
+        nonceTextView = findViewById(R.id.nonce)
+        minerTextView = findViewById(R.id.miner)
+        noOfTransactionsTextView = findViewById(R.id.no_of_transactions)
+        totalSentTextView = findViewById(R.id.total_sent)
+        sizeTextView = findViewById(R.id.size)
+        totalFeesTextView = findViewById(R.id.total_fees)
+        minedTextView = findViewById(R.id.mined)
         acceptButton = findViewById(R.id.accept_button)
 
         st_id = intent.getStringExtra("block_id") ?: ""
@@ -252,6 +308,7 @@ class BlockDetailsActivity : AppCompatActivity() {
                     previousHashTextView.text = previousHash
                     nonceTextView.text = nonce
                     minerTextView.text = miner
+
                     noOfTransactionsTextView.text = noOfTransactions
                     totalSentTextView.text = totalSent
                     sizeTextView.text = size
@@ -260,8 +317,9 @@ class BlockDetailsActivity : AppCompatActivity() {
 
                     acceptButton.setOnClickListener {
 
-                        val blockchainReference = FirebaseDatabase.getInstance().getReference("miners")
-                            .child(st_phone).child("blockchain").child(st_id)
+                        val blockchainReference =
+                            FirebaseDatabase.getInstance().getReference("miners")
+                                .child(st_phone).child("blockchain").child(st_id)
 
                         FirebaseDatabase.getInstance().getReference("miners")
                             .child(st_phone).child("notifications").child(st_id).removeValue()
@@ -271,17 +329,22 @@ class BlockDetailsActivity : AppCompatActivity() {
                             .addListenerForSingleValueEvent(object : ValueEventListener {
                                 override fun onDataChange(snapshot: DataSnapshot) {
                                     if (snapshot.exists()) {
-                                        val transactionDetailsSnapshot = snapshot.child("transaction_details")
+                                        val transactionDetailsSnapshot =
+                                            snapshot.child("transaction_details")
 
-                                        val allVerified = transactionDetailsSnapshot.children.all { transactionSnapshot ->
-                                            transactionSnapshot.child("Status").getValue(String::class.java) == "Verified"
-                                        }
+                                        val allVerified =
+                                            transactionDetailsSnapshot.children.all { transactionSnapshot ->
+                                                transactionSnapshot.child("Status")
+                                                    .getValue(String::class.java) == "Verified"
+                                            }
 
-                                        val anyNotVerified = transactionDetailsSnapshot.children.any { transactionSnapshot ->
-                                            transactionSnapshot.child("Status").getValue(String::class.java) == "Not Verified"
-                                        }
+                                        val anyNotVerified =
+                                            transactionDetailsSnapshot.children.any { transactionSnapshot ->
+                                                transactionSnapshot.child("Status")
+                                                    .getValue(String::class.java) == "Not Verified"
+                                            }
 
-                                        if(anyNotVerified) {
+                                        if (anyNotVerified) {
                                             Toast.makeText(
                                                 this@BlockDetailsActivity,
                                                 "Corrupted Block Can't Be Added To Blockchain."
@@ -289,10 +352,7 @@ class BlockDetailsActivity : AppCompatActivity() {
                                                 Toast.LENGTH_SHORT
                                             ).show()
 
-                                            acceptButton.isEnabled = false
-                                        }
-
-                                        else if (allVerified) {
+                                        } else if (allVerified) {
                                             FirebaseDatabase.getInstance().getReference("miners")
                                                 .child(st_phone)
                                                 .child("blockchain").child(st_id).removeValue()
@@ -302,9 +362,17 @@ class BlockDetailsActivity : AppCompatActivity() {
                                             FirebaseDatabase.getInstance().getReference("miners")
                                                 .child(st_phone)
                                                 .child("block_queue").removeValue()
-                                        }
 
-                                        else {
+                                            //FirebaseDatabase.getInstance().getReference("miners").child(st_phone)
+                                            //    .child("block_queue").child(st_id).removeValue()
+
+                                            Toast.makeText(
+                                                this@BlockDetailsActivity,
+                                                "This Block Has Been Added To Your Blockchain Successfully. " +
+                                                        "Mine The Next Block Of It To Add It To The Main Blockchain.",
+                                                Toast.LENGTH_SHORT
+                                            ).show()
+                                        } else {
                                             Toast.makeText(
                                                 this@BlockDetailsActivity,
                                                 "Please Make Sure That All Transactions Have Been Verified.",
@@ -318,17 +386,6 @@ class BlockDetailsActivity : AppCompatActivity() {
 
                                 }
                             })
-
-
-                        FirebaseDatabase.getInstance().getReference("miners").child(st_phone)
-                            .child("block_queue").child(st_id).removeValue()
-
-                        Toast.makeText(
-                            this@BlockDetailsActivity,
-                            "This Block Has Been Added To Your Blockchain Successfully. " +
-                                    "Mine The Next Block Of It To Add It To The Main Blockchain.",
-                            Toast.LENGTH_SHORT
-                        ).show()
                     }
                 }
             }

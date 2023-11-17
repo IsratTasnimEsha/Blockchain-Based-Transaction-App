@@ -120,8 +120,6 @@ class AddTransactionFragment : Fragment(), NavigationView.OnNavigationItemSelect
         val sharedPreferences = requireContext().getSharedPreferences("MySharedPref", Context.MODE_PRIVATE)
         val st_phone = sharedPreferences.getString("Phone", "") ?: ""
 
-
-
         databaseReference.child("miners").child(st_phone)
             .addListenerForSingleValueEvent(object : ValueEventListener {
                 @RequiresApi(Build.VERSION_CODES.O)
@@ -181,7 +179,8 @@ class AddTransactionFragment : Fragment(), NavigationView.OnNavigationItemSelect
                         receiverExists = true
                     }
                     if (phone == st_phone) {
-                        senderBalance = childSnapshot.child("Balance").value.toString().toDoubleOrNull() ?: 0.0
+                        senderBalance = childSnapshot.child("Users_Balance").child(st_phone)
+                            .value.toString().toDoubleOrNull() ?: 0.0
                     }
                 }
 
@@ -222,7 +221,7 @@ class AddTransactionFragment : Fragment(), NavigationView.OnNavigationItemSelect
                     val phone = childSnapshot.key
 
                     if (phone != null) {
-                        senderRef.child(st_phone).child("Balance").setValue(newBalance)
+                        senderRef.child(phone).child("Users_Balance").child(st_phone).setValue(newBalance)
 
                         val newTransactionRef = senderRef.child(phone).child("transactions").child(transactionKey!!)
                         val refString = newTransactionRef.key

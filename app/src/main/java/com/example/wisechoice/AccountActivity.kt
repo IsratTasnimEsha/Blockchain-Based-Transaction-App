@@ -42,7 +42,7 @@ class AccountActivity : AppCompatActivity() {
                     name?.setText(str_uname)
                     val str_phone = snapshot.child("Phone").value as String?
                     phone?.setText(str_phone)
-                    val str_balance = snapshot.child("Users_Balance").child(st_phone).value
+                    val str_balance = snapshot.child("Users_Balance").child(st_phone).child("Total").value
                     balance?.setText(str_balance.toString())
                 }
 

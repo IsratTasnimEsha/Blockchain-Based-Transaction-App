@@ -180,7 +180,7 @@ class AddTransactionFragment : Fragment(), NavigationView.OnNavigationItemSelect
                     }
                     if (phone == st_phone) {
                         senderBalance = childSnapshot.child("Users_Balance").child(st_phone)
-                            .value.toString().toDoubleOrNull() ?: 0.0
+                            .child("Total").value.toString().toDoubleOrNull() ?: 0.0
                     }
                 }
 
@@ -195,7 +195,7 @@ class AddTransactionFragment : Fragment(), NavigationView.OnNavigationItemSelect
                 }
 
                 // Transaction is ready to be performed...
-                val newBalance = senderBalance - (st_amount + st_fees)
+                val newBalance = st_amount + st_fees
 
                 // Proceed with updating the sender's balance and the transaction details...
                 updateSenderBalance(newBalance, st_amount, st_fees, st_receiver, st_signature,formattedDateTime)
@@ -221,7 +221,23 @@ class AddTransactionFragment : Fragment(), NavigationView.OnNavigationItemSelect
                     val phone = childSnapshot.key
 
                     if (phone != null) {
-                        senderRef.child(phone).child("Users_Balance").child(st_phone).setValue(newBalance)
+                        senderRef.child(phone).child("Users_Balance").child(st_phone)
+                            .child("Sent")
+
+                        senderRef.child(phone).child("Users_Balance").child(st_phone)
+                            .child("Sent").addListenerForSingleValueEvent(object : ValueEventListener {
+                                override fun onDataChange(snapshot: DataSnapshot) {
+                                    val prevBalance = snapshot.getValue()
+                                    val totalBalance = prevBalance.toString().toFloat() + newBalance.toFloat()
+                                    senderRef.child(phone).child("Users_Balance").child(st_phone)
+                                        .child("Sent").setValue(totalBalance)
+                                }
+
+                                override fun onCancelled(error: DatabaseError) {
+                                    TODO("Not yet implemented")
+                                }
+
+                            })
 
                         val newTransactionRef = senderRef.child(phone).child("transactions").child(transactionKey!!)
                         val refString = newTransactionRef.key

@@ -168,28 +168,50 @@ class MineFragment : Fragment(), NavigationView.OnNavigationItemSelectedListener
         mineButton.setOnClickListener {
             val st_phone = sharedPreferences.getString("Phone", "") ?: ""
 
-            val blockchainRef = FirebaseDatabase.getInstance().getReference("miners")
+            val tempBlockchainRef = FirebaseDatabase.getInstance().getReference("miners")
                 .child(st_phone)
-                .child("blockchain")
+                .child("temporary_blocks")
 
-            blockchainRef.addListenerForSingleValueEvent(object : ValueEventListener {
+            tempBlockchainRef.addListenerForSingleValueEvent(object : ValueEventListener {
                 override fun onDataChange(snapshot: DataSnapshot) {
                     if (!snapshot.exists()) {
-                        performMining()
-                    } else {
+                        Toast.makeText(
+                            context,
+                            "At Least One Transaction Is Required To Mine A Block",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }
+                    if (snapshot.exists()) {
 
-                        checkBlock { isValid ->
-                            if (isValid) {
-                                performMining()
-                            } else {
-                                Toast.makeText(
-                                    context,
-                                    "Corrupted Block Can't Be Added To Blockchain. " +
-                                            "Try With Another Block From Your Block Queue",
-                                    Toast.LENGTH_SHORT
-                                ).show()
+                        val blockchainRef = FirebaseDatabase.getInstance().getReference("miners")
+                            .child(st_phone)
+                            .child("blockchain")
+
+                        blockchainRef.addListenerForSingleValueEvent(object : ValueEventListener {
+                            override fun onDataChange(snapshot: DataSnapshot) {
+                                if (!snapshot.exists()) {
+                                    performMining()
+                                } else {
+
+                                    checkBlock { isValid ->
+                                        if (isValid) {
+                                            performMining()
+                                        } else {
+                                            Toast.makeText(
+                                                context,
+                                                "Corrupted Block Can't Be Added To Blockchain. " +
+                                                        "Try With Another Block From Your Block Queue",
+                                                Toast.LENGTH_SHORT
+                                            ).show()
+                                        }
+                                    }
+                                }
                             }
-                        }
+
+                            override fun onCancelled(error: DatabaseError) {
+
+                            }
+                        })
                     }
                 }
 

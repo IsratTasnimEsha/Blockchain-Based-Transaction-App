@@ -159,19 +159,11 @@ class SignUpActivity : AppCompatActivity() {
                                                                     databaseReference.child("miners")
                                                                         .child(phone.toString())
                                                                         .child("Users_Balance").child(st_phone)
-                                                                        .child("Total").setValue(100.0)
+                                                                        .child("Initial").setValue(100.0)
                                                                     databaseReference.child("miners")
                                                                         .child(phone.toString())
                                                                         .child("Users_Balance").child(st_phone)
                                                                         .child("Sent").setValue(0.0)
-                                                                    databaseReference.child("miners")
-                                                                        .child(phone.toString())
-                                                                        .child("Users_Balance").child(st_phone)
-                                                                        .child("Received").setValue(0.0)
-                                                                    databaseReference.child("miners")
-                                                                        .child(phone.toString())
-                                                                        .child("Users_Balance").child(st_phone)
-                                                                        .child("Mined").setValue(0.0)
                                                                 }
                                                             }
 
@@ -221,14 +213,11 @@ class SignUpActivity : AppCompatActivity() {
         databaseReference.child("miners").child(st_phone).child("Public_Key")
             .setValue(publicKey)
         databaseReference.child("miners").child(st_phone).child("Private_Key").setValue(r_privateKey)
+
         databaseReference.child("miners").child(st_phone).child("Users_Balance")
-            .child(st_phone).child("Total").setValue(100.0)
+            .child(st_phone).child("Initial").setValue(100.0)
         databaseReference.child("miners").child(st_phone).child("Users_Balance")
             .child(st_phone).child("Sent").setValue(0.0)
-        databaseReference.child("miners").child(st_phone).child("Users_Balance")
-            .child(st_phone).child("Received").setValue(0.0)
-        databaseReference.child("miners").child(st_phone).child("Users_Balance")
-            .child(st_phone).child("Mined").setValue(0.0)
 
         // Additional code for PublicKeys node
         val userReference = databaseReference.child("PublicKeys").child(st_phone)
@@ -267,13 +256,9 @@ class SignUpActivity : AppCompatActivity() {
                         val phone = childSnapshot.key
 
                         databaseReference.child("miners").child(phone.toString())
-                            .child("Users_Balance").child(st_phone).child("Total").setValue(100.0)
+                            .child("Users_Balance").child(st_phone).child("Initial").setValue(100.0)
                         databaseReference.child("miners").child(phone.toString())
                             .child("Users_Balance").child(st_phone).child("Sent").setValue(0.00)
-                        databaseReference.child("miners").child(phone.toString())
-                            .child("Users_Balance").child(st_phone).child("Received").setValue(0.0)
-                        databaseReference.child("miners").child(phone.toString())
-                            .child("Users_Balance").child(st_phone).child("Mined").setValue(0.0)
                     }
                 }
 

@@ -23,6 +23,7 @@ import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
 import java.security.KeyFactory
+import java.security.MessageDigest
 import java.security.Signature
 import java.security.spec.X509EncodedKeySpec
 import java.util.Base64
@@ -316,76 +317,7 @@ class BlockDetailsActivity : AppCompatActivity() {
                     minedTextView.text = minedTime
 
                     acceptButton.setOnClickListener {
-
-                        val blockchainReference =
-                            FirebaseDatabase.getInstance().getReference("miners")
-                                .child(st_phone).child("blockchain").child(st_id)
-
-                        FirebaseDatabase.getInstance().getReference("miners")
-                            .child(st_phone).child("notifications").child(st_id).removeValue()
-
-                        FirebaseDatabase.getInstance().getReference("miners").child(st_phone)
-                            .child("block_queue").child(st_id)
-                            .addListenerForSingleValueEvent(object : ValueEventListener {
-                                override fun onDataChange(snapshot: DataSnapshot) {
-                                    if (snapshot.exists()) {
-                                        val transactionDetailsSnapshot =
-                                            snapshot.child("transaction_details")
-
-                                        val allVerified =
-                                            transactionDetailsSnapshot.children.all { transactionSnapshot ->
-                                                transactionSnapshot.child("Status")
-                                                    .getValue(String::class.java) == "Verified"
-                                            }
-
-                                        val anyNotVerified =
-                                            transactionDetailsSnapshot.children.any { transactionSnapshot ->
-                                                transactionSnapshot.child("Status")
-                                                    .getValue(String::class.java) == "Not Verified"
-                                            }
-
-                                        if (anyNotVerified) {
-                                            Toast.makeText(
-                                                this@BlockDetailsActivity,
-                                                "Corrupted Block Can't Be Added To Blockchain."
-                                                        + "Please Try Another Block From Block Queue",
-                                                Toast.LENGTH_SHORT
-                                            ).show()
-
-                                        } else if (allVerified) {
-                                            FirebaseDatabase.getInstance().getReference("miners")
-                                                .child(st_phone)
-                                                .child("blockchain").child(st_id).removeValue()
-
-                                            blockchainReference.setValue(snapshot.value)
-
-                                            FirebaseDatabase.getInstance().getReference("miners")
-                                                .child(st_phone)
-                                                .child("block_queue").removeValue()
-
-                                            //FirebaseDatabase.getInstance().getReference("miners").child(st_phone)
-                                            //    .child("block_queue").child(st_id).removeValue()
-
-                                            Toast.makeText(
-                                                this@BlockDetailsActivity,
-                                                "This Block Has Been Added To Your Blockchain Successfully. " +
-                                                        "Mine The Next Block Of It To Add It To The Main Blockchain.",
-                                                Toast.LENGTH_SHORT
-                                            ).show()
-                                        } else {
-                                            Toast.makeText(
-                                                this@BlockDetailsActivity,
-                                                "Please Make Sure That All Transactions Have Been Verified.",
-                                                Toast.LENGTH_SHORT
-                                            ).show()
-                                        }
-                                    }
-                                }
-
-                                override fun onCancelled(error: DatabaseError) {
-
-                                }
-                            })
+                        acceptBlock()
                     }
                 }
             }
@@ -394,5 +326,84 @@ class BlockDetailsActivity : AppCompatActivity() {
 
             }
         })
+    }
+
+    private fun checkBlock(callback: (Boolean) -> Unit) {
+
+    }
+
+    private fun acceptBlock() {
+        val sharedPreferences = this.getSharedPreferences("MySharedPref", Context.MODE_PRIVATE)
+        val st_phone = sharedPreferences.getString("Phone", "") ?: ""
+
+        val blockchainReference =
+            FirebaseDatabase.getInstance().getReference("miners")
+                .child(st_phone).child("blockchain").child(st_id)
+
+        FirebaseDatabase.getInstance().getReference("miners")
+            .child(st_phone).child("notifications").child(st_id).removeValue()
+
+        FirebaseDatabase.getInstance().getReference("miners").child(st_phone)
+            .child("block_queue").child(st_id)
+            .addListenerForSingleValueEvent(object : ValueEventListener {
+                override fun onDataChange(snapshot: DataSnapshot) {
+                    if (snapshot.exists()) {
+                        val transactionDetailsSnapshot =
+                            snapshot.child("transaction_details")
+
+                        val allVerified =
+                            transactionDetailsSnapshot.children.all { transactionSnapshot ->
+                                transactionSnapshot.child("Status")
+                                    .getValue(String::class.java) == "Verified"
+                            }
+
+                        val anyNotVerified =
+                            transactionDetailsSnapshot.children.any { transactionSnapshot ->
+                                transactionSnapshot.child("Status")
+                                    .getValue(String::class.java) == "Not Verified"
+                            }
+
+                        if (anyNotVerified) {
+                            Toast.makeText(
+                                this@BlockDetailsActivity,
+                                "Corrupted Block Can't Be Added To Blockchain."
+                                        + "Please Try Another Block From Block Queue",
+                                Toast.LENGTH_SHORT
+                            ).show()
+
+                        } else if (allVerified) {
+                            FirebaseDatabase.getInstance().getReference("miners")
+                                .child(st_phone)
+                                .child("blockchain").child(st_id).removeValue()
+
+                            blockchainReference.setValue(snapshot.value)
+
+                            FirebaseDatabase.getInstance().getReference("miners")
+                                .child(st_phone)
+                                .child("block_queue").removeValue()
+
+                            //FirebaseDatabase.getInstance().getReference("miners").child(st_phone)
+                            //    .child("block_queue").child(st_id).removeValue()
+
+                            Toast.makeText(
+                                this@BlockDetailsActivity,
+                                "This Block Has Been Added To Your Blockchain Successfully. " +
+                                        "Mine The Next Block Of It To Add It To The Main Blockchain.",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        } else {
+                            Toast.makeText(
+                                this@BlockDetailsActivity,
+                                "Please Make Sure That All Transactions Have Been Verified.",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        }
+                    }
+                }
+
+                override fun onCancelled(error: DatabaseError) {
+
+                }
+            })
     }
 }

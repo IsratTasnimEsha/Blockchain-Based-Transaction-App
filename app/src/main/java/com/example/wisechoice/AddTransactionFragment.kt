@@ -180,7 +180,7 @@ class AddTransactionFragment : Fragment(), NavigationView.OnNavigationItemSelect
                     }
                     if (phone == st_phone) {
                         senderBalance = childSnapshot.child("Users_Balance").child(st_phone)
-                            .child("Total").value.toString().toDoubleOrNull() ?: 0.0
+                            .child("Initial").value.toString().toDoubleOrNull() ?: 0.0
                     }
                 }
 

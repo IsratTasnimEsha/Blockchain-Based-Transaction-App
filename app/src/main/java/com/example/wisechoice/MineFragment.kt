@@ -191,20 +191,9 @@ class MineFragment : Fragment(), NavigationView.OnNavigationItemSelectedListener
                             override fun onDataChange(snapshot: DataSnapshot) {
                                 if (!snapshot.exists()) {
                                     performMining()
+                                    removeNulls()
                                 } else {
-
-                                    checkBlock { isValid ->
-                                        if (isValid) {
-                                            performMining()
-                                        } else {
-                                            Toast.makeText(
-                                                context,
-                                                "Corrupted Block Can't Be Added To Blockchain. " +
-                                                        "Try With Another Block From Your Block Queue",
-                                                Toast.LENGTH_SHORT
-                                            ).show()
-                                        }
-                                    }
+                                    checkBlock()
                                 }
                             }
 
@@ -219,7 +208,6 @@ class MineFragment : Fragment(), NavigationView.OnNavigationItemSelectedListener
 
                 }
             })
-
         }
 
         checkBlockchain("main_blockchain", "Blocked")
@@ -263,6 +251,7 @@ class MineFragment : Fragment(), NavigationView.OnNavigationItemSelectedListener
 
             override fun onCancelled(error: DatabaseError) {}
         })
+        removeNulls()
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
@@ -273,11 +262,20 @@ class MineFragment : Fragment(), NavigationView.OnNavigationItemSelectedListener
 
         val concatenatedTransactions = StringBuilder()
 
+        var total_amount = 0.0
+        var total_fees = 0.0
+
         for (idValue in ids) {
             val sender = senders[ids.indexOf(idValue)]
             val receiver = receivers[ids.indexOf(idValue)]
             val amount = amounts[ids.indexOf(idValue)]
             val fees = feeses[ids.indexOf(idValue)]
+
+            val amountFloat = amount?.toFloatOrNull() ?: 0.0f
+            val feesFloat = fees?.toFloatOrNull() ?: 0.0f
+
+            total_amount += amountFloat
+            total_fees += feesFloat
 
             val transactionInfo =
                 "Sender: $sender, Receiver: $receiver, Amount: $amount, Fees: $fees"
@@ -294,7 +292,7 @@ class MineFragment : Fragment(), NavigationView.OnNavigationItemSelectedListener
             Thread {
                 do {
                     randomNotch = (10000..99999).random()
-                    val stringWithNotch = "$randomNotch$st_phone$concatenatedString"
+                    val stringWithNotch = "$randomNotch$st_phone$concatenatedString$total_amount$total_fees"
 
                     hashedString = hashString(stringWithNotch)
 
@@ -306,408 +304,471 @@ class MineFragment : Fragment(), NavigationView.OnNavigationItemSelectedListener
 
                 } while (!hashedString.startsWith("00"))
 
-                val blockVal = FirebaseDatabase.getInstance().getReference("miners")
-                    .child(st_phone).child("block_queue").push()
 
-                blockVal.child("Block_ID").setValue(blockVal.key)
-                blockVal.child("Block_Hash").setValue("$hashedString")
-                blockVal.child("Nonce").setValue(randomNotch)
-                blockVal.child("Miner").setValue(st_phone)
-                blockVal.child("Size")
-                    .setValue(((hashedString.length - 5) * 4).toString())
-                blockVal.child("Previous_Hash")
-                    .setValue("000000000000000000000000000000000000000000000000000000000000000000")
+                if(concatenatedString.toString().length != 0) {
+                    val temporaryBlockRef = FirebaseDatabase.getInstance().getReference("miners")
+                        .child(st_phone)
+                        .child("temporary_blocks")
 
-                val currentDateTime = LocalDateTime.now()
-                val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
-                val formattedDateTime = currentDateTime.format(formatter)
-
-                blockVal.child("Mined_Time").setValue(formattedDateTime.toString())
-
-                val st_phone = sharedPreferences.getString("Phone", "") ?: ""
-
-                val minersRef = FirebaseDatabase.getInstance().getReference("miners")
-
-                minersRef.child(st_phone).child("blockchain")
-                    .addListenerForSingleValueEvent(object : ValueEventListener {
+                    temporaryBlockRef.addListenerForSingleValueEvent(object : ValueEventListener {
                         override fun onDataChange(dataSnapshot: DataSnapshot) {
-                            for (childSnapshot in dataSnapshot.children) {
-
-                                val previousBlockID = childSnapshot.key
-                                val previousMiner = childSnapshot.child("Miner").value
-                                val previousTotalFees =
-                                    childSnapshot.child("Total_Fees").value
-                                val previousHash =
-                                    childSnapshot.child("Block_Hash").value
-                                val prevPreviousHash =
-                                    childSnapshot.child("Previous_Hash").value
-
-                                blockVal.child("Previous_Hash").setValue(previousHash)
-
-                                val minersRef =
-                                    FirebaseDatabase.getInstance()
-                                        .getReference("miners")
-
-                                minersRef.addListenerForSingleValueEvent(object :
-                                    ValueEventListener {
-                                    override fun onDataChange(snapshot: DataSnapshot) {
-                                        for (childSnapshot in snapshot.children) {
-                                            val phone = childSnapshot.key
-
-                                            if (phone != null) {
-
-                                                val currentDateTime =
-                                                    LocalDateTime.now()
-                                                val formatter =
-                                                    DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
-                                                val formattedDateTime =
-                                                    currentDateTime.format(formatter)
-
-                                                val reference =
-                                                    FirebaseDatabase.getInstance()
-                                                        .getReference("miners")
-                                                        .child(phone)
-                                                        .child("notifications")
-
-                                                reference.child(previousBlockID.toString())
-                                                    .child("Message")
-                                                    .setValue(previousMiner)
-
-                                                reference.child(blockVal.key.toString())
-                                                    .child("Message")
-                                                    .setValue(st_phone)
-
-                                                reference.child(blockVal.key.toString())
-                                                    .child("Notification_Time")
-                                                    .setValue(formattedDateTime.toString())
-
-                                                reference.child(previousBlockID.toString())
-                                                    .child("Notification_Time")
-                                                    .setValue(formattedDateTime.toString())
-
-                                                reference.child(blockVal.key.toString())
-                                                    .child("Status")
-                                                    .setValue("Unread")
-
-                                                reference.child(previousBlockID.toString())
-                                                    .child("Status")
-                                                    .setValue("Unread")
-
-                                                reference.child(blockVal.key.toString())
-                                                    .child("Activity")
-                                                    .setValue("BlockDetailsActivity")
-
-                                                reference.child(previousBlockID.toString())
-                                                    .child("Activity")
-                                                    .setValue("BlockchainDetailsActivity")
-
-                                                reference.child(blockVal.key.toString())
-                                                    .child("Notification_ID")
-                                                    .setValue(blockVal.key.toString())
-
-                                                reference.child(previousBlockID.toString())
-                                                    .child("Notification_ID")
-                                                    .setValue(previousBlockID.toString())
-
-                                                FirebaseDatabase.getInstance()
-                                                    .getReference("miners")
-                                                    .child(phone).child("blockchain")
-                                                    .removeValue()
-
-                                                FirebaseDatabase.getInstance()
-                                                    .getReference("miners")
-                                                    .child(phone).child("blockchain")
-                                                    .child(previousBlockID.toString())
-                                                    .setValue(
-                                                        dataSnapshot.child(
-                                                            previousBlockID.toString()
-                                                        ).value
-                                                    )
-
-                                                FirebaseDatabase.getInstance()
-                                                    .getReference("miners")
-                                                    .child(phone)
-                                                    .child("main_blockchain")
-                                                    .child(previousBlockID.toString())
-                                                    .setValue(
-                                                        dataSnapshot.child(
-                                                            previousBlockID.toString()
-                                                        ).value
-                                                    )
-
-                                                val databaseReference =
-                                                    FirebaseDatabase.getInstance()
-                                                        .getReference("miners")
-                                                        .child(phone)
-                                                        .child("main_blockchain")
-                                                        .child(previousBlockID.toString())
-                                                        .child("transaction_details")
-
-                                                databaseReference.addListenerForSingleValueEvent(
-                                                    object : ValueEventListener {
-                                                        override fun onDataChange(
-                                                            dataSnapshot: DataSnapshot
-                                                        ) {
-                                                            for (transactionSnapshot in dataSnapshot.children) {
-
-                                                                val transactionID =
-                                                                    transactionSnapshot.key
-                                                                val amount =
-                                                                    transactionSnapshot.child(
-                                                                        "Amount"
-                                                                    ).value.toString()
-                                                                val receiver =
-                                                                    transactionSnapshot.child(
-                                                                        "Receiver"
-                                                                    ).value.toString()
-
-                                                                val receiverBalanceRef =
-                                                                    FirebaseDatabase.getInstance()
-                                                                        .getReference("miners")
-                                                                        .child(phone)
-                                                                        .child("Users_Balance")
-                                                                        .child(receiver)
-                                                                        .child("Received_Amount")
-
-                                                                receiverBalanceRef.child(
-                                                                    transactionID.toString()
-                                                                ).setValue(amount)
-
-                                                                val previousMinerBalanceRef =
-                                                                    FirebaseDatabase.getInstance()
-                                                                        .getReference("miners")
-                                                                        .child(phone)
-                                                                        .child("Users_Balance")
-                                                                        .child(
-                                                                            previousMiner.toString()
-                                                                        )
-                                                                        .child("Mined_Amount")
-
-                                                                previousMinerBalanceRef.child(
-                                                                    previousBlockID.toString()
-                                                                )
-                                                                    .setValue(
-                                                                        previousTotalFees.toString()
-                                                                    )
-                                                            }
-                                                        }
-
-                                                        override fun onCancelled(
-                                                            databaseError: DatabaseError
-                                                        ) {
-                                                            // Handle potential errors here
-                                                        }
-                                                    })
-
-
-                                                FirebaseDatabase.getInstance()
-                                                    .getReference("miners")
-                                                    .child(phone).child("block_queue")
-                                                    .addListenerForSingleValueEvent(
-                                                        object :
-                                                            ValueEventListener {
-                                                            override fun onDataChange(
-                                                                dataSnapshot: DataSnapshot
-                                                            ) {
-                                                                for (childSnapshot in dataSnapshot.children) {
-                                                                    val ID =
-                                                                        childSnapshot.key
-                                                                    val blockHash =
-                                                                        childSnapshot.child(
-                                                                            "Previous_Hash"
-                                                                        ).value
-
-                                                                    if (blockHash == prevPreviousHash) {
-                                                                        if (ID.toString() != previousBlockID.toString()) {
-                                                                            FirebaseDatabase.getInstance()
-                                                                                .getReference(
-                                                                                    "miners"
-                                                                                )
-                                                                                .child(
-                                                                                    st_phone
-                                                                                )
-                                                                                .child("rejected_blocks")
-                                                                                .child(
-                                                                                    ID.toString()
-                                                                                )
-                                                                                .setValue(
-                                                                                    dataSnapshot.child(
-                                                                                        ID.toString()
-                                                                                    ).value
-                                                                                )
-                                                                        }
-
-                                                                        if (ID.toString() != previousBlockID.toString()) {
-                                                                            FirebaseDatabase.getInstance()
-                                                                                .getReference(
-                                                                                    "miners"
-                                                                                )
-                                                                                .child(
-                                                                                    phone
-                                                                                )
-                                                                                .child("rejected_blocks")
-                                                                                .child(
-                                                                                    ID.toString()
-                                                                                )
-                                                                                .setValue(
-                                                                                    dataSnapshot.child(
-                                                                                        ID.toString()
-                                                                                    ).value
-                                                                                )
-                                                                        }
-
-                                                                        FirebaseDatabase.getInstance()
-                                                                            .getReference(
-                                                                                "miners"
-                                                                            )
-                                                                            .child(phone)
-                                                                            .child("block_queue")
-                                                                            .child(ID.toString())
-                                                                            .removeValue()
-
-                                                                        FirebaseDatabase.getInstance()
-                                                                            .getReference(
-                                                                                "miners"
-                                                                            )
-                                                                            .child(phone)
-                                                                            .child("notifications")
-                                                                            .child(ID.toString())
-                                                                            .removeValue()
-                                                                    }
-                                                                }
-                                                            }
-
-                                                            override fun onCancelled(
-                                                                error: DatabaseError
-                                                            ) {
-
-                                                            }
-                                                        })
-                                            }
-                                        }
-                                    }
-
-                                    override fun onCancelled(error: DatabaseError) {
-
-                                    }
-                                })
+                            if (dataSnapshot.exists()) {
+                                setValues(hashedString, randomNotch) 
                             }
                         }
 
-                        override fun onCancelled(error: DatabaseError) {
-
+                        override fun onCancelled(databaseError: DatabaseError) {
+                            // Handle onCancelled event
                         }
                     })
-
-                val blockRef = blockVal.child("transaction_details")
-                var noOfTransactions = 0
-                var totalAmount = 0.0
-                var totalFees = 0.0
-
-                for (idValue in ids) {
-                    val transactionRef =
-                        FirebaseDatabase.getInstance().getReference("miners")
-                            .child(st_phone).child("transactions")
-
-                    val query =
-                        transactionRef.orderByChild("Transaction_ID").equalTo(idValue)
-                    query.addListenerForSingleValueEvent(object : ValueEventListener {
-
-                        override fun onDataChange(transactionSnapshot: DataSnapshot) {
-                            for (transactionData in transactionSnapshot.children) {
-                                val transactionId = transactionData.key.toString()
-                                val transactionVerifyRef =
-                                    transactionRef.child(transactionId)
-                                        .child("Status")
-
-                                transactionVerifyRef.setValue("Unrecognized")
-
-                                noOfTransactions++
-
-                                val index = ids.indexOf(idValue)
-                                if (index != -1) {
-                                    val amount = amounts[index].toDoubleOrNull() ?: 0.0
-                                    totalAmount += amount
-
-                                    val fees = feeses[index].toDoubleOrNull() ?: 0.0
-                                    totalFees += fees
-                                }
-
-                                blockRef.child(transactionId).child("Transaction_ID")
-                                    .setValue(ids[ids.indexOf(idValue)])
-                                blockRef.child(transactionId).child("Sender")
-                                    .setValue(senders[ids.indexOf(idValue)])
-                                blockRef.child(transactionId).child("Receiver")
-                                    .setValue(receivers[ids.indexOf(idValue)])
-                                blockRef.child(transactionId).child("Amount")
-                                    .setValue(amounts[ids.indexOf(idValue)])
-                                blockRef.child(transactionId).child("Fees")
-                                    .setValue(feeses[ids.indexOf(idValue)])
-                                blockRef.child(transactionId).child("Signature")
-                                    .setValue(signatures[ids.indexOf(idValue)])
-                                blockRef.child(transactionId).child("Transaction_Time")
-                                    .setValue(transaction_times[ids.indexOf(idValue)])
-                                blockRef.child(transactionId).child("Status")
-                                    .setValue("Unrecognized")
-
-                                blockVal.child("No_Of_Transactions")
-                                    .setValue(noOfTransactions)
-                                blockVal.child("Total_Amount").setValue(totalAmount)
-                                blockVal.child("Total_Fees").setValue(totalFees)
-                            }
-                        }
-
-                        override fun onCancelled(error: DatabaseError) {
-
-                        }
-                    })
-
-                    val tempTransactionRef =
-                        FirebaseDatabase.getInstance().getReference("miners")
-                            .child(st_phone).child("temporary_blocks").child(idValue)
-
-                    tempTransactionRef.removeValue()
                 }
-
-                minersRef.addListenerForSingleValueEvent(object : ValueEventListener {
-                    override fun onDataChange(dataSnapshot: DataSnapshot) {
-                        for (childSnapshot in dataSnapshot.children) {
-                            val childKey = childSnapshot.key
-
-                            val blockchainReference =
-                                FirebaseDatabase.getInstance().getReference("miners")
-                                    .child(childKey.toString()).child("block_queue")
-                                    .child(blockVal.key.toString())
-
-                            FirebaseDatabase.getInstance().getReference("miners")
-                                .child(st_phone)
-                                .child("block_queue").child(blockVal.key.toString())
-                                .addListenerForSingleValueEvent(object :
-                                    ValueEventListener {
-                                    override fun onDataChange(snapshot: DataSnapshot) {
-                                        if (snapshot.exists()) {
-                                            blockchainReference.setValue(snapshot.value)
-                                        }
-                                    }
-
-                                    override fun onCancelled(error: DatabaseError) {
-
-                                    }
-                                })
-                        }
-                    }
-
-                    override fun onCancelled(databaseError: DatabaseError) {
-
-                    }
-                })
-
 
             }.start()
         }
     }
 
-    private fun checkBlock(callback: (Boolean) -> Unit) {
+    private fun removeNulls() {
+        FirebaseDatabase.getInstance().getReference("miners")
+            .addListenerForSingleValueEvent(object : ValueEventListener {
+                override fun onDataChange(snapshot: DataSnapshot) {
+                    for (childSnapshot in snapshot.children) {
+                        val phone = childSnapshot.key
+
+                        FirebaseDatabase.getInstance().getReference("miners")
+                            .child(phone.toString())
+                            .child("block_queue").addListenerForSingleValueEvent(object : ValueEventListener {
+                                override fun onDataChange(snapshot: DataSnapshot) {
+                                    for (childSnapshot in snapshot.children) {
+                                        val block = childSnapshot.key
+                                        val no = childSnapshot.child("transaction_details")
+                                        if(!no.exists()) {
+                                            FirebaseDatabase.getInstance().getReference("miners")
+                                                .child(phone.toString())
+                                                .child("block_queue").child(block.toString()).removeValue()
+                                        }
+                                    }
+                                }
+
+                                override fun onCancelled(error: DatabaseError) {
+
+                                }
+                            })
+                    }
+                }
+
+                override fun onCancelled(error: DatabaseError) {
+                    TODO("Not yet implemented")
+                }
+
+            })
+    }
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    private fun setValues(hashedString: String, randomNotch: Int) {
+
+        val sharedPreferences = requireContext().getSharedPreferences("MySharedPref", Context.MODE_PRIVATE)
+
+        val st_phone = sharedPreferences.getString("Phone", "") ?: ""
+
+        val blockVal = FirebaseDatabase.getInstance().getReference("miners")
+            .child(st_phone).child("block_queue").push()
+
+        blockVal.child("Block_ID").setValue(blockVal.key)
+        blockVal.child("Block_Hash").setValue("$hashedString")
+        blockVal.child("Nonce").setValue(randomNotch)
+        blockVal.child("Miner").setValue(st_phone)
+        blockVal.child("Size")
+            .setValue(((hashedString.length - 5) * 4).toString())
+        blockVal.child("Previous_Hash")
+            .setValue("000000000000000000000000000000000000000000000000000000000000000000")
+
+        val currentDateTime = LocalDateTime.now()
+        val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
+        val formattedDateTime = currentDateTime.format(formatter)
+
+        blockVal.child("Mined_Time").setValue(formattedDateTime.toString())
+
+
+        val minersRef = FirebaseDatabase.getInstance().getReference("miners")
+
+        minersRef.child(st_phone).child("blockchain")
+            .limitToLast(1)
+            .addListenerForSingleValueEvent(object : ValueEventListener {
+                override fun onDataChange(dataSnapshot: DataSnapshot) {
+                    for (childSnapshot in dataSnapshot.children) {
+
+                        val previousBlockID = childSnapshot.key
+                        val previousMiner = childSnapshot.child("Miner").value
+                        val previousTotalAmount =
+                            childSnapshot.child("Total_Amount").value
+                        val previousTotalFees =
+                            childSnapshot.child("Total_Fees").value
+                        val previousHash =
+                            childSnapshot.child("Block_Hash").value
+                        val prevPreviousHash =
+                            childSnapshot.child("Previous_Hash").value
+
+                        blockVal.child("Previous_Hash").setValue(previousHash)
+
+                        val minersRef =
+                            FirebaseDatabase.getInstance()
+                                .getReference("miners")
+
+                        minersRef.addListenerForSingleValueEvent(object :
+                            ValueEventListener {
+                            override fun onDataChange(snapshot: DataSnapshot) {
+                                for (childSnapshot in snapshot.children) {
+                                    val phone = childSnapshot.key
+
+                                    if (phone != null) {
+
+                                        val currentDateTime =
+                                            LocalDateTime.now()
+                                        val formatter =
+                                            DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
+                                        val formattedDateTime =
+                                            currentDateTime.format(formatter)
+
+                                        val reference =
+                                            FirebaseDatabase.getInstance()
+                                                .getReference("miners")
+                                                .child(phone)
+                                                .child("notifications")
+
+                                        reference.child(previousBlockID.toString())
+                                            .child("Message")
+                                            .setValue(previousMiner)
+
+                                        reference.child(blockVal.key.toString())
+                                            .child("Message")
+                                            .setValue(st_phone)
+
+                                        reference.child(blockVal.key.toString())
+                                            .child("Notification_Time")
+                                            .setValue(formattedDateTime.toString())
+
+                                        reference.child(previousBlockID.toString())
+                                            .child("Notification_Time")
+                                            .setValue(formattedDateTime.toString())
+
+                                        reference.child(blockVal.key.toString())
+                                            .child("Status")
+                                            .setValue("Unread")
+
+                                        reference.child(previousBlockID.toString())
+                                            .child("Status")
+                                            .setValue("Unread")
+
+                                        reference.child(blockVal.key.toString())
+                                            .child("Activity")
+                                            .setValue("BlockDetailsActivity")
+
+                                        reference.child(previousBlockID.toString())
+                                            .child("Activity")
+                                            .setValue("BlockchainDetailsActivity")
+
+                                        reference.child(blockVal.key.toString())
+                                            .child("Notification_ID")
+                                            .setValue(blockVal.key.toString())
+
+                                        reference.child(previousBlockID.toString())
+                                            .child("Notification_ID")
+                                            .setValue(previousBlockID.toString())
+
+                                        FirebaseDatabase.getInstance()
+                                            .getReference("miners")
+                                            .child(phone).child("blockchain")
+                                            .removeValue()
+
+                                        FirebaseDatabase.getInstance()
+                                            .getReference("miners")
+                                            .child(phone).child("blockchain")
+                                            .child(previousBlockID.toString())
+                                            .setValue(
+                                                dataSnapshot.child(
+                                                    previousBlockID.toString()
+                                                ).value
+                                            )
+
+                                        FirebaseDatabase.getInstance()
+                                            .getReference("miners")
+                                            .child(phone)
+                                            .child("main_blockchain")
+                                            .child(previousBlockID.toString())
+                                            .setValue(
+                                                dataSnapshot.child(
+                                                    previousBlockID.toString()
+                                                ).value
+                                            )
+
+                                        val databaseReference =
+                                            FirebaseDatabase.getInstance()
+                                                .getReference("miners")
+                                                .child(phone)
+                                                .child("main_blockchain")
+                                                .child(previousBlockID.toString())
+                                                .child("transaction_details")
+
+                                        databaseReference.addListenerForSingleValueEvent(
+                                            object : ValueEventListener {
+                                                override fun onDataChange(
+                                                    dataSnapshot: DataSnapshot
+                                                ) {
+                                                    for (transactionSnapshot in dataSnapshot.children) {
+
+                                                        val transactionID =
+                                                            transactionSnapshot.key
+                                                        val amount =
+                                                            transactionSnapshot.child(
+                                                                "Amount"
+                                                            ).value.toString()
+                                                        val receiver =
+                                                            transactionSnapshot.child(
+                                                                "Receiver"
+                                                            ).value.toString()
+
+                                                        val receiverBalanceRef =
+                                                            FirebaseDatabase.getInstance()
+                                                                .getReference("miners")
+                                                                .child(phone)
+                                                                .child("Users_Balance")
+                                                                .child(receiver)
+                                                                .child("Received_Amount")
+
+                                                        receiverBalanceRef.child(
+                                                            transactionID.toString()
+                                                        ).setValue(amount)
+
+                                                        val previousMinerBalanceRef =
+                                                            FirebaseDatabase.getInstance()
+                                                                .getReference("miners")
+                                                                .child(phone)
+                                                                .child("Users_Balance")
+                                                                .child(
+                                                                    previousMiner.toString()
+                                                                )
+                                                                .child("Mined_Amount")
+
+                                                        previousMinerBalanceRef.child(
+                                                            previousBlockID.toString()
+                                                        )
+                                                            .setValue(
+                                                                previousTotalFees.toString()
+                                                            )
+                                                    }
+                                                }
+
+                                                override fun onCancelled(
+                                                    databaseError: DatabaseError
+                                                ) {
+                                                    // Handle potential errors here
+                                                }
+                                            })
+
+                                        FirebaseDatabase.getInstance()
+                                            .getReference("miners")
+                                            .child(phone).child("block_queue")
+                                            .addListenerForSingleValueEvent(
+                                                object :
+                                                    ValueEventListener {
+                                                    override fun onDataChange(
+                                                        dataSnapshot: DataSnapshot
+                                                    ) {
+                                                        for (childSnapshot in dataSnapshot.children) {
+                                                            val ID =
+                                                                childSnapshot.key
+                                                            val blockHash =
+                                                                childSnapshot.child(
+                                                                    "Previous_Hash"
+                                                                ).value
+
+                                                            if (blockHash == prevPreviousHash) {
+                                                                if (ID.toString() != previousBlockID.toString()) {
+                                                                    FirebaseDatabase.getInstance()
+                                                                        .getReference(
+                                                                            "miners"
+                                                                        )
+                                                                        .child(
+                                                                            st_phone
+                                                                        )
+                                                                        .child("rejected_blocks")
+                                                                        .child(
+                                                                            ID.toString()
+                                                                        )
+                                                                        .setValue(
+                                                                            dataSnapshot.child(
+                                                                                ID.toString()
+                                                                            ).value
+                                                                        )
+                                                                }
+
+                                                                if (ID.toString() != previousBlockID.toString()) {
+                                                                    FirebaseDatabase.getInstance()
+                                                                        .getReference(
+                                                                            "miners"
+                                                                        )
+                                                                        .child(
+                                                                            phone
+                                                                        )
+                                                                        .child("rejected_blocks")
+                                                                        .child(
+                                                                            ID.toString()
+                                                                        )
+                                                                        .setValue(
+                                                                            dataSnapshot.child(
+                                                                                ID.toString()
+                                                                            ).value
+                                                                        )
+                                                                }
+
+                                                                FirebaseDatabase.getInstance()
+                                                                    .getReference(
+                                                                        "miners"
+                                                                    )
+                                                                    .child(phone)
+                                                                    .child("block_queue")
+                                                                    .child(ID.toString())
+                                                                    .removeValue()
+
+                                                                FirebaseDatabase.getInstance()
+                                                                    .getReference(
+                                                                        "miners"
+                                                                    )
+                                                                    .child(phone)
+                                                                    .child("notifications")
+                                                                    .child(ID.toString())
+                                                                    .removeValue()
+                                                            }
+                                                        }
+                                                    }
+
+                                                    override fun onCancelled(
+                                                        error: DatabaseError
+                                                    ) {
+
+                                                    }
+                                                })
+                                    }
+                                }
+                            }
+
+                            override fun onCancelled(error: DatabaseError) {
+
+                            }
+                        })
+                    }
+                }
+
+                override fun onCancelled(error: DatabaseError) {
+
+                }
+            })
+
+        val blockRef = blockVal.child("transaction_details")
+        var noOfTransactions = 0
+        var totalAmount = 0.0
+        var totalFees = 0.0
+
+        for (idValue in ids) {
+            val transactionRef =
+                FirebaseDatabase.getInstance().getReference("miners")
+                    .child(st_phone).child("transactions")
+
+            val query =
+                transactionRef.orderByChild("Transaction_ID").equalTo(idValue)
+            query.addListenerForSingleValueEvent(object : ValueEventListener {
+
+                override fun onDataChange(transactionSnapshot: DataSnapshot) {
+                    for (transactionData in transactionSnapshot.children) {
+                        val transactionId = transactionData.key.toString()
+                        val transactionVerifyRef =
+                            transactionRef.child(transactionId)
+                                .child("Status")
+
+                        transactionVerifyRef.setValue("Unrecognized")
+
+                        noOfTransactions++
+
+                        val index = ids.indexOf(idValue)
+                        if (index != -1) {
+                            val amount = amounts[index].toDoubleOrNull() ?: 0.0
+                            totalAmount += amount
+
+                            val fees = feeses[index].toDoubleOrNull() ?: 0.0
+                            totalFees += fees
+                        }
+
+                        blockRef.child(transactionId).child("Transaction_ID")
+                            .setValue(ids[ids.indexOf(idValue)])
+                        blockRef.child(transactionId).child("Sender")
+                            .setValue(senders[ids.indexOf(idValue)])
+                        blockRef.child(transactionId).child("Receiver")
+                            .setValue(receivers[ids.indexOf(idValue)])
+                        blockRef.child(transactionId).child("Amount")
+                            .setValue(amounts[ids.indexOf(idValue)])
+                        blockRef.child(transactionId).child("Fees")
+                            .setValue(feeses[ids.indexOf(idValue)])
+                        blockRef.child(transactionId).child("Signature")
+                            .setValue(signatures[ids.indexOf(idValue)])
+                        blockRef.child(transactionId).child("Transaction_Time")
+                            .setValue(transaction_times[ids.indexOf(idValue)])
+                        blockRef.child(transactionId).child("Status")
+                            .setValue("Unrecognized")
+
+                        blockVal.child("No_Of_Transactions")
+                            .setValue(noOfTransactions)
+                        blockVal.child("Total_Amount").setValue(totalAmount)
+                        blockVal.child("Total_Fees").setValue(totalFees)
+                    }
+                }
+
+                override fun onCancelled(error: DatabaseError) {
+
+                }
+            })
+
+            val tempTransactionRef =
+                FirebaseDatabase.getInstance().getReference("miners")
+                    .child(st_phone).child("temporary_blocks").child(idValue)
+
+            tempTransactionRef.removeValue()
+        }
+
+        minersRef.addListenerForSingleValueEvent(object : ValueEventListener {
+            override fun onDataChange(dataSnapshot: DataSnapshot) {
+                for (childSnapshot in dataSnapshot.children) {
+                    val childKey = childSnapshot.key
+
+                    val blockchainReference =
+                        FirebaseDatabase.getInstance().getReference("miners")
+                            .child(childKey.toString()).child("block_queue")
+                            .child(blockVal.key.toString())
+
+                    FirebaseDatabase.getInstance().getReference("miners")
+                        .child(st_phone)
+                        .child("block_queue").child(blockVal.key.toString())
+                        .addListenerForSingleValueEvent(object :
+                            ValueEventListener {
+                            override fun onDataChange(snapshot: DataSnapshot) {
+                                if (snapshot.exists()) {
+                                    blockchainReference.setValue(snapshot.value)
+                                }
+                            }
+
+                            override fun onCancelled(error: DatabaseError) {
+
+                            }
+                        })
+                }
+            }
+
+            override fun onCancelled(databaseError: DatabaseError) {
+
+            }
+        })
+    }
+
+    private fun checkBlock() {
         val sharedPreferences =
             requireContext().getSharedPreferences("MySharedPref", Context.MODE_PRIVATE)
         val st_phone = sharedPreferences.getString("Phone", "") ?: ""
@@ -727,16 +788,27 @@ class MineFragment : Fragment(), NavigationView.OnNavigationItemSelectedListener
                             .child(st_phone).child("blockchain").child(previousBlockID.toString())
                             .child("transaction_details")
                             .addListenerForSingleValueEvent(object : ValueEventListener {
+                                @RequiresApi(Build.VERSION_CODES.O)
                                 override fun onDataChange(dataSnapshot: DataSnapshot) {
                                     val transactionInfoList = mutableListOf<String>()
 
-                                    for (grandSnapshot in dataSnapshot.children) {
-                                        val sender = grandSnapshot.child("Sender").getValue(String::class.java)
-                                        val receiver = grandSnapshot.child("Receiver").getValue(String::class.java)
-                                        val amount = grandSnapshot.child("Amount").getValue()
-                                        val fees = grandSnapshot.child("Fees").getValue()
+                                    var total_amount = 0.0
+                                    var total_fees = 0.0
 
-                                        // Create a string for each grandchild
+                                    for (grandSnapshot in dataSnapshot.children) {
+                                        val sender = grandSnapshot.child("Sender")
+                                            .getValue(String::class.java)
+                                        val receiver = grandSnapshot.child("Receiver")
+                                            .getValue(String::class.java)
+                                        val amount = grandSnapshot.child("Amount").getValue(String::class.java)
+                                        val fees = grandSnapshot.child("Fees").getValue(String::class.java)
+
+                                        val amountFloat = amount?.toFloatOrNull() ?: 0.0f
+                                        val feesFloat = fees?.toFloatOrNull() ?: 0.0f
+
+                                        total_amount += amountFloat
+                                        total_fees += feesFloat
+
                                         val grandChildInfo =
                                             "Sender: $sender, Receiver: $receiver, Amount: $amount, Fees: $fees"
 
@@ -744,25 +816,47 @@ class MineFragment : Fragment(), NavigationView.OnNavigationItemSelectedListener
                                         transactionInfoList.add(grandChildInfo)
                                     }
 
-                                    // Join all grandchild strings into a single string with a custom separator
                                     val finalTransactionInfo =
                                         transactionInfoList.joinToString(separator = "")
 
-                                    val hashed = hashString("$previousNonce$previousMiner$finalTransactionInfo")
+                                    Toast.makeText(
+                                        context,
+                                        "$total_amount $total_fees", Toast.LENGTH_SHORT
+                                    ).show()
 
-                                    callback(hashed == previousHash)
+                                    val hashed =
+                                        hashString("$previousNonce$previousMiner$finalTransactionInfo$total_amount$total_fees")
+
+                                    if (hashed == previousHash) {
+                                        Toast.makeText(
+                                            context,
+                                            "$total_amount $total_fees",
+                                            Toast.LENGTH_SHORT
+                                        ).show()
+
+                                        removeNulls()
+                                        performMining()
+                                        removeNulls()
+
+                                    } else {
+                                        removeNulls()
+
+                                        Toast.makeText(
+                                            context,
+                                            "Corrupted Block Can't Be Added To Blockchain. " +
+                                                    "Try With Another Block From Your Block Queue",
+                                            Toast.LENGTH_SHORT
+                                        ).show()
+                                    }
                                 }
 
                                 override fun onCancelled(databaseError: DatabaseError) {
-                                    // Handle onCancelled event
-                                    callback(false)
                                 }
                             })
                     }
                 }
 
                 override fun onCancelled(error: DatabaseError) {
-                    callback(false)
                 }
             })
     }
@@ -834,30 +928,44 @@ class MineFragment : Fragment(), NavigationView.OnNavigationItemSelectedListener
     override fun onNavigationItemSelected(item: MenuItem): Boolean {
         when (item.itemId) {
             R.id.block_queue -> {
+                removeNulls()
+
                 val intent = Intent(requireContext(), BlockQueueActivity::class.java)
                 startActivity(intent)
             }
             R.id.blockchain -> {
+                removeNulls()
+
                 val intent = Intent(requireContext(), BlockchainActivity::class.java)
                 startActivity(intent)
             }
             R.id.transaction -> {
+                removeNulls()
+
                 val intent = Intent(requireContext(), MinerTransactionActivity::class.java)
                 startActivity(intent)
             }
             R.id.rejected -> {
+                removeNulls()
+
                 val intent = Intent(requireContext(), RejectedBlocksActivity::class.java)
                 startActivity(intent)
             }
             R.id.notifications -> {
+                removeNulls()
+
                 val intent = Intent(requireContext(), NotificationActivity::class.java)
                 startActivity(intent)
             }
             R.id.account -> {
+                removeNulls()
+
                 val intent = Intent(requireContext(), AccountActivity::class.java)
                 startActivity(intent)
             }
             R.id.logout -> {
+                removeNulls()
+
                 val sharedPrefs = context?.getSharedPreferences(SignInActivity.PREFS_NAME, Context.MODE_PRIVATE)
                 val editor = sharedPrefs?.edit()
                 editor?.putBoolean("hasSignedIn", false)

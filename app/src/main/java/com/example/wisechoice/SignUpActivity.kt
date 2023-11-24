@@ -76,6 +76,11 @@ class SignUpActivity : AppCompatActivity() {
                 Toast.makeText(this@SignUpActivity, "Password Is Required.",
                     Toast.LENGTH_SHORT).show()
             }
+            else if (st_pass.length < 6) {
+                r_pass.setError("Password Should Be Of At Least 6 Characters.")
+                Toast.makeText(this@SignUpActivity, "Password Should Be Of At Least 6 Characters.",
+                    Toast.LENGTH_SHORT).show()
+            }
             else {
                 auth = Firebase.auth
 
@@ -223,6 +228,7 @@ class SignUpActivity : AppCompatActivity() {
                                                 val intent = Intent(this@SignUpActivity,
                                                     SignInActivity::class.java)
                                                 startActivity(intent)
+                                                finish()
                                             }
                                         } else {
                                             Toast.makeText(

@@ -62,11 +62,12 @@ class SignInActivity : AppCompatActivity() {
                                     val sharedPrefs = getSharedPreferences(SignInActivity.PREFS_NAME, Context.MODE_PRIVATE)
                                     val editor = sharedPrefs.edit()
                                     editor.putBoolean("hasSignedIn", true)
-                                    editor.putString("Phone", st_phone)
+                                    editor.putString("Phone", st_phone.toString())
                                     editor.apply()
 
                                     val intent = Intent(this@SignInActivity, MinerTransactionActivity::class.java)
                                     startActivity(intent)
+                                    finish()
 
                                 } else {
 

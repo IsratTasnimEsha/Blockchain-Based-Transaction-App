@@ -174,15 +174,10 @@ class AddTransactionFragment : Fragment(), NavigationView.OnNavigationItemSelect
                 var senderBalance = 0.0
 
                 for (childSnapshot in snapshot.children) {
-                    val phone = childSnapshot.key
-                    if (phone == st_receiver) {
+                    val phone = childSnapshot.key.toString()
+                    if (phone.toString() == st_receiver.toString()) {
                         receiverExists = true
-                    }
-                    else {
-                        Toast.makeText(requireContext(), "Receiver Doesn't Exists.", Toast.LENGTH_SHORT).show()
-                        return
-                    }
-                    if (phone == st_phone) {
+
                         val random1 = phoneNumbers.filter { it != st_phone }.random()
                         val random2 = phoneNumbers.filter { it != st_phone }.random()
                         val random3 = phoneNumbers.filter { it != st_phone }.random()
@@ -267,6 +262,12 @@ class AddTransactionFragment : Fragment(), NavigationView.OnNavigationItemSelect
                             Toast.makeText(context,
                                 "Someone Has Corrupted Data. Please Try Again To Transact", Toast.LENGTH_SHORT).show()
                         }
+
+                        return
+                    }
+                    else {
+                        Toast.makeText(requireContext(), "Receiver Doesn't Exists." + phone + st_receiver, Toast.LENGTH_SHORT).show()
+                        return
                     }
                 }
 

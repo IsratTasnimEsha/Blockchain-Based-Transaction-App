@@ -210,8 +210,8 @@ class MineFragment : Fragment(), NavigationView.OnNavigationItemSelectedListener
             })
         }
 
-        checkBlockchain("main_blockchain", "Blocked")
-        checkBlockchain("blockchain", "Temporary Blocked")
+        checkBlockchain("main_blockchain")
+        checkBlockchain("blockchain")
 
         val st_phone = sharedPreferences.getString("Phone", "") ?: ""
 
@@ -861,7 +861,7 @@ class MineFragment : Fragment(), NavigationView.OnNavigationItemSelectedListener
             })
     }
 
-    private fun checkBlockchain(path: String, status: String) {
+    private fun checkBlockchain(path: String) {
         val sharedPreferences = requireContext().getSharedPreferences("MySharedPref", Context.MODE_PRIVATE)
         val st_phone = sharedPreferences.getString("Phone", "") ?: ""
 
@@ -886,14 +886,29 @@ class MineFragment : Fragment(), NavigationView.OnNavigationItemSelectedListener
                                     .child(transactionKey.toString())
                                     .removeValue()
 
+                            var st_status = transactionSnapshot.child("Block_No")
+
+                            if(st_status != null) {
                                 FirebaseDatabase.getInstance()
                                     .getReference("miners")
                                     .child(st_phone)
                                     .child("transactions")
                                     .child(transactionKey.toString())
                                     .child("Status")
-                                    .setValue(status)
+                                    .setValue("Blocked")
+                            }
 
+                            else {
+                                FirebaseDatabase.getInstance()
+                                    .getReference("miners")
+                                    .child(st_phone)
+                                    .child("transactions")
+                                    .child(transactionKey.toString())
+                                    .child("Status")
+                                    .setValue("Temporary Blocked")
+                            }
+
+                            if(path == "main_blockchain") {
                                 FirebaseDatabase.getInstance()
                                     .getReference("miners")
                                     .child(st_phone)
@@ -901,7 +916,7 @@ class MineFragment : Fragment(), NavigationView.OnNavigationItemSelectedListener
                                     .child(transactionKey.toString())
                                     .child("Block_No")
                                     .setValue(blockKey.toString())
-
+                            }
                         }
                     }
                 }
@@ -973,7 +988,7 @@ class MineFragment : Fragment(), NavigationView.OnNavigationItemSelectedListener
 
                 val intent = Intent(requireContext(), SignInActivity::class.java)
                 startActivity(intent)
-                requireActivity().finish() // Finish the current activity
+                requireActivity().finish()
             }
         }
         return true

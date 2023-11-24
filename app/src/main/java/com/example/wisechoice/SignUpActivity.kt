@@ -83,50 +83,75 @@ class SignUpActivity : AppCompatActivity() {
                                             saveNewUser(st_name, st_phone, st_pass,
                                                 Base64.getEncoder().encodeToString(publicKey.encoded))
 
-                                        } else if (phoneNumbers.size == 1) {
-
-                                            val existingPhone = phoneNumbers.first()
-                                            val existingBalance = snapshot.child(existingPhone).child("Users_Balance").value
-                                            val existingBlockchain = snapshot.child(existingPhone).child("main_blockchain")
-
-                                            if(existingBlockchain.exists()) {
-                                                val lastChild = snapshot.child(existingPhone).child("main_blockchain").children.last()
-
-                                                saveNewUserWithExistingBalance(st_name, st_phone, st_pass,
-                                                    Base64.getEncoder().encodeToString(publicKey.encoded), existingBalance,
-                                                    existingBlockchain.value, lastChild.key, lastChild.value)
-                                            }
-
-                                            else {
-                                                saveNewUserWithExistingBalance(st_name, st_phone, st_pass,
-                                                    Base64.getEncoder().encodeToString(publicKey.encoded), existingBalance,
-                                                    "", "", "")
-                                            }
                                         }
 
-                                        else if (phoneNumbers.size >= 2) {
+                                        else if (phoneNumbers.size >= 1) {
+                                            val random1 = phoneNumbers.random()
+                                            val random2 = phoneNumbers.random()
+                                            val random3 = phoneNumbers.random()
+                                            val random4 = phoneNumbers.random()
+
                                             val balance1 =
-                                                snapshot.child(phoneNumbers.random()).child("Users_Balance")
+                                                snapshot.child(random1).child("Users_Balance")
                                             val balance2 =
-                                                snapshot.child(phoneNumbers.random()).child("Users_Balance")
+                                                snapshot.child(random2).child("Users_Balance")
 
                                             val blockchain1 =
-                                                snapshot.child(phoneNumbers.random()).child("main_blockchain")
+                                                snapshot.child(random3).child("main_blockchain")
                                             val blockchain2 =
-                                                snapshot.child(phoneNumbers.random()).child("main_blockchain")
+                                                snapshot.child(random4).child("main_blockchain")
 
                                             if (balance1.exists() && balance2.exists() && balance1.value == balance2.value) {
 
                                                 if(blockchain1.exists() && blockchain2.exists() &&
                                                     blockchain1.value != blockchain2.value) {
                                                     Toast.makeText(this@SignUpActivity,
-                                                        "Someone Has Corrupted Data. Please Try Again To Sign Up", Toast.LENGTH_SHORT).show()
+                                                        "Someone Has Corrupted Data. Please Try Again To Sign Up",
+                                                        Toast.LENGTH_SHORT).show()
                                                 }
 
                                                 else {
                                                     databaseReference.child("miners")
                                                         .child(st_phone)
                                                         .child("Users_Balance").setValue(balance1.value)
+
+                                                    val transactions =
+                                                        snapshot.child(random3).child("transactions")
+
+                                                    databaseReference.child("miners")
+                                                        .child(st_phone)
+                                                        .child("transactions").setValue(transactions.value)
+
+                                                    databaseReference.child("miners")
+                                                        .child(st_phone)
+                                                        .child("transactions")
+                                                        .addListenerForSingleValueEvent(object : ValueEventListener {
+                                                            override fun onDataChange(snapshot: DataSnapshot) {
+                                                                for (childSnapshot in snapshot.children) {
+                                                                    val id = childSnapshot.key
+                                                                    if (childSnapshot.child("Block_No").exists()) {
+                                                                        databaseReference.child("miners")
+                                                                            .child(st_phone)
+                                                                            .child("transactions")
+                                                                            .child(id.toString())
+                                                                            .child("Status")
+                                                                            .setValue("Blocked")
+                                                                    } else {
+                                                                        databaseReference.child("miners")
+                                                                            .child(st_phone)
+                                                                            .child("transactions")
+                                                                            .child(id.toString())
+                                                                            .child("Status")
+                                                                            .setValue("Unrecognized")
+                                                                    }
+                                                                }
+                                                            }
+
+                                                            override fun onCancelled(error: DatabaseError) {
+
+                                                            }
+                                                        })
+
 
                                                     if(blockchain1.exists() && blockchain2.exists() &&
                                                         blockchain1.value == blockchain2.value) {
@@ -218,54 +243,6 @@ class SignUpActivity : AppCompatActivity() {
             .child(st_phone).child("Initial").setValue(100.0)
         databaseReference.child("miners").child(st_phone).child("Users_Balance")
             .child(st_phone).child("Sent").setValue(0.0)
-
-        // Additional code for PublicKeys node
-        val userReference = databaseReference.child("PublicKeys").child(st_phone)
-        userReference.child("User_Name").setValue(st_name)
-        userReference.child("Phone").setValue(st_phone)
-        userReference.child("Public_Key").setValue(publicKey)
-
-        val intent = Intent(this@SignUpActivity, SignInActivity::class.java)
-        startActivity(intent)
-    }
-
-    @RequiresApi(Build.VERSION_CODES.O)
-    private fun saveNewUserWithExistingBalance(st_name: String, st_phone: String, st_pass: String, publicKey: Any,
-                                               existingBalance: Any?, existingBlockchain: Any?, lastChildKey: Any?,
-                                               lastChildValue: Any?) {
-        databaseReference.child("miners").child(st_phone).child("User_Name").setValue(st_name)
-        databaseReference.child("miners").child(st_phone).child("Phone").setValue(st_phone)
-        databaseReference.child("miners").child(st_phone).child("Password").setValue(st_pass)
-        databaseReference.child("miners").child(st_phone).child("Public_Key")
-            .setValue(publicKey)
-        databaseReference.child("miners").child(st_phone).child("Private_Key").setValue(r_privateKey)
-        databaseReference.child("miners").child(st_phone).child("Users_Balance")
-            .setValue(existingBalance)
-
-        if(existingBlockchain != "") {
-            databaseReference.child("miners").child(st_phone).child("main_blockchain")
-                .setValue(existingBlockchain)
-            databaseReference.child("miners").child(st_phone).child("blockchain")
-                .child(lastChildKey.toString()).setValue(lastChildValue)
-        }
-
-        databaseReference.child("miners")
-            .addListenerForSingleValueEvent(object : ValueEventListener {
-                override fun onDataChange(snapshot: DataSnapshot) {
-                    for (childSnapshot in snapshot.children) {
-                        val phone = childSnapshot.key
-
-                        databaseReference.child("miners").child(phone.toString())
-                            .child("Users_Balance").child(st_phone).child("Initial").setValue(100.0)
-                        databaseReference.child("miners").child(phone.toString())
-                            .child("Users_Balance").child(st_phone).child("Sent").setValue(0.00)
-                    }
-                }
-
-                override fun onCancelled(error: DatabaseError) {
-                    TODO("Not yet implemented")
-                }
-            })
 
         // Additional code for PublicKeys node
         val userReference = databaseReference.child("PublicKeys").child(st_phone)

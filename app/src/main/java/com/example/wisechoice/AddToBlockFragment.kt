@@ -103,8 +103,8 @@ class TempBlockAdapter(
         val signatureValue = signatures[position]
         val timeval = transaction_times[position]
 
-        checkBlockchain("main_blockchain", "Blocked")
-        checkBlockchain("blockchain", "Temporary Blocked")
+        checkBlockchain("main_blockchain")
+        checkBlockchain("blockchain")
 
         if(verifies[position] == "Unrecognized") {
             holder.sender.setTextColor(ContextCompat.getColor(context, R.color.olive))
@@ -248,7 +248,7 @@ class TempBlockAdapter(
         }
     }
 
-    private fun checkBlockchain(path: String, status: String) {
+    private fun checkBlockchain(path: String) {
         val sharedPreferences = context.getSharedPreferences("MySharedPref", Context.MODE_PRIVATE)
         val st_phone = sharedPreferences.getString("Phone", "") ?: ""
 
@@ -272,14 +272,7 @@ class TempBlockAdapter(
                                     .child(transactionKey.toString())
                                     .removeValue()
 
-                                FirebaseDatabase.getInstance()
-                                    .getReference("miners")
-                                    .child(st_phone)
-                                    .child("transactions")
-                                    .child(transactionKey.toString())
-                                    .child("Status")
-                                    .setValue(status)
-
+                            if(path == "main_blockchain") {
                                 FirebaseDatabase.getInstance()
                                     .getReference("miners")
                                     .child(st_phone)
@@ -287,7 +280,29 @@ class TempBlockAdapter(
                                     .child(transactionKey.toString())
                                     .child("Block_No")
                                     .setValue(blockKey.toString())
+                            }
 
+                            var st_status = transactionSnapshot.child("Block_No")
+
+                            if(st_status != null) {
+                                FirebaseDatabase.getInstance()
+                                    .getReference("miners")
+                                    .child(st_phone)
+                                    .child("transactions")
+                                    .child(transactionKey.toString())
+                                    .child("Status")
+                                    .setValue("Blocked")
+                            }
+
+                            else {
+                                FirebaseDatabase.getInstance()
+                                    .getReference("miners")
+                                    .child(st_phone)
+                                    .child("transactions")
+                                    .child(transactionKey.toString())
+                                    .child("Status")
+                                    .setValue("Temporary Blocked")
+                            }
                         }
                     }
                 }

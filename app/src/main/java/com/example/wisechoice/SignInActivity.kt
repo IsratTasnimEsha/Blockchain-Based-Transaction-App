@@ -9,18 +9,23 @@ import android.view.View
 import android.widget.EditText
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import com.google.firebase.Firebase
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.auth
 import com.google.firebase.database.*
 
 class SignInActivity : AppCompatActivity() {
-    private lateinit var l_phone: EditText
+    private lateinit var l_email: EditText
     private lateinit var l_pass: EditText
     private lateinit var databaseReference: DatabaseReference
+
+    private lateinit var auth: FirebaseAuth
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_sign_in)
 
-        l_phone = findViewById(R.id.l_phone)
+        l_email = findViewById(R.id.l_email)
         l_pass = findViewById(R.id.l_pass)
         databaseReference = FirebaseDatabase.getInstance().reference
     }
@@ -30,44 +35,66 @@ class SignInActivity : AppCompatActivity() {
     }
 
     fun updatePage(view: View) {
-        val st_phone = l_phone.text.toString()
+        val st_email = l_email.text.toString()
         val st_pass = l_pass.text.toString()
 
-        if (st_phone.isEmpty()) {
-            l_phone.error = "Please Enter The Phone Number."
+        if (st_email.isEmpty()) {
+            l_email.error = "Please Enter The Email Address."
         } else if (st_pass.isEmpty()) {
             l_pass.error = "Please Enter The Password."
         } else {
-            databaseReference.child("miners").addListenerForSingleValueEvent(object : ValueEventListener {
-                override fun onDataChange(snapshot: DataSnapshot) {
-                    if (snapshot.hasChild(st_phone)) {
-                        val str_pass = snapshot.child(st_phone).child("Password").value as? String
+            auth = Firebase.auth
+            auth.signInWithEmailAndPassword(st_email, st_pass)
+                .addOnCompleteListener(this) { task ->
+                    if (task.isSuccessful) {
 
-                        if (str_pass == st_pass) {
-                            val sharedPrefs = getSharedPreferences(SignInActivity.PREFS_NAME, Context.MODE_PRIVATE)
-                            val editor = sharedPrefs.edit()
-                            editor.putBoolean("hasSignedIn", true)
-                            editor.putString("Phone", st_phone)
-                            editor.apply()
+                        val user = auth.currentUser
+                        val userID = user?.uid.toString()
 
-                            val intent = Intent(this@SignInActivity, MinerTransactionActivity::class.java)
-                            startActivity(intent)
-                        } else {
-                            Toast.makeText(this@SignInActivity, "Password Is Wrong.", Toast.LENGTH_SHORT).show()
-                        }
+                        val databaseReference = FirebaseDatabase.getInstance().getReference("users").child(userID)
+
+                        databaseReference.addListenerForSingleValueEvent(object : ValueEventListener {
+                            override fun onDataChange(dataSnapshot: DataSnapshot) {
+                                if (dataSnapshot.exists()) {
+
+                                    val st_phone = dataSnapshot.getValue(String::class.java)
+
+                                    val sharedPrefs = getSharedPreferences(SignInActivity.PREFS_NAME, Context.MODE_PRIVATE)
+                                    val editor = sharedPrefs.edit()
+                                    editor.putBoolean("hasSignedIn", true)
+                                    editor.putString("Phone", st_phone)
+                                    editor.apply()
+
+                                    val intent = Intent(this@SignInActivity, MinerTransactionActivity::class.java)
+                                    startActivity(intent)
+
+                                } else {
+
+                                }
+                            }
+
+                            override fun onCancelled(databaseError: DatabaseError) {
+
+                            }
+                        })
+
                     } else {
-                        Toast.makeText(this@SignInActivity, "Phone Number Is Not Registered Yet.", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(
+                            baseContext,
+                            "Authentication failed.",
+                            Toast.LENGTH_SHORT,
+                        ).show()
                     }
                 }
-
-                override fun onCancelled(error: DatabaseError) {
-
-                }
-            })
         }
     }
 
     companion object {
         const val PREFS_NAME = "MySharedPref"
+    }
+
+    fun forgotPassword(view: View) {
+        val intent = Intent(this@SignInActivity, ForgotPasswordActivity::class.java)
+        startActivity(intent)
     }
 }

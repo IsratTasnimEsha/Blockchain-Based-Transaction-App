@@ -158,8 +158,6 @@ class AddTransactionFragment : Fragment(), NavigationView.OnNavigationItemSelect
         val st_amount = amountField.text.toString().toDoubleOrNull() ?: 0.0
         val st_fees = feesField.text.toString().toDoubleOrNull() ?: 0.0
         val st_signature = signature
-        val unrecognized: String = "Unrecognized"
-
 
         if (st_receiver.isEmpty() || st_amount == 0.0 || st_fees == 0.0 || st_signature.isEmpty()) {
             Toast.makeText(requireContext(), "Please fill in all fields.", Toast.LENGTH_SHORT).show()
@@ -179,6 +177,10 @@ class AddTransactionFragment : Fragment(), NavigationView.OnNavigationItemSelect
                     val phone = childSnapshot.key
                     if (phone == st_receiver) {
                         receiverExists = true
+                    }
+                    else {
+                        Toast.makeText(requireContext(), "Receiver Doesn't Exists.", Toast.LENGTH_SHORT).show()
+                        return
                     }
                     if (phone == st_phone) {
                         val random1 = phoneNumbers.filter { it != st_phone }.random()

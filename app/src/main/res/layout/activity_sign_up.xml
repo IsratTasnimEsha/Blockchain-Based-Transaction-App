@@ -8,15 +8,15 @@
     android:background="@color/few_blue">
 
     <androidx.cardview.widget.CardView
-        android:layout_width="200dp"
-        android:layout_height="200dp"
+        android:layout_width="175dp"
+        android:layout_height="175dp"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:cardBackgroundColor="@color/dark_blue" />
 
     <androidx.cardview.widget.CardView
-        android:layout_width="200dp"
-        android:layout_height="200dp"
+        android:layout_width="175dp"
+        android:layout_height="175dp"
         app:cardBackgroundColor="@color/dark_blue"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent">
@@ -66,6 +66,25 @@
                 android:ems="10"
                 android:hint="Phone"
                 android:inputType="phone"
+                android:minHeight="48dp" />
+        </androidx.cardview.widget.CardView>
+
+        <androidx.cardview.widget.CardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="5dp"
+            app:cardCornerRadius="8dp">
+            <EditText
+                android:id="@+id/r_email"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@color/transparent"
+                android:drawableLeft="@drawable/baseline_email_24"
+                android:drawablePadding="5dp"
+                android:padding="5dp"
+                android:ems="10"
+                android:hint="Email"
+                android:inputType="textEmailAddress"
                 android:minHeight="48dp" />
         </androidx.cardview.widget.CardView>
 

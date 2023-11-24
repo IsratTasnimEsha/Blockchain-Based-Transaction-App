@@ -424,9 +424,6 @@ class AddToBlockFragment : Fragment(), NavigationView.OnNavigationItemSelectedLi
         statusSelected("Unrecognized", "Verified", "Unrecognized",
             "Verified", "Unrecognized", "Verified")
 
-        //  statusSelected("Unrecognized", "Verified", "Not Verified",
-        //   "In Processing...", "Temporary Blocked", "Blocked")
-
         statusText = view.findViewById(R.id.status_text)
         statusCard = view.findViewById(R.id.status_card)
 
@@ -563,7 +560,7 @@ class AddToBlockFragment : Fragment(), NavigationView.OnNavigationItemSelectedLi
 
                 val intent = Intent(requireContext(), SignInActivity::class.java)
                 startActivity(intent)
-                requireActivity().finish() // Finish the current activity
+                requireActivity().finish()
             }
         }
         return true

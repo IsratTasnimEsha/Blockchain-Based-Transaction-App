@@ -310,7 +310,7 @@ class BlockQueueActivity : AppCompatActivity() , NavigationView.OnNavigationItem
 
                 val intent = Intent(this, SignInActivity::class.java)
                 startActivity(intent)
-                this.finish() // Finish the current activity
+                this.finish()
             }
         }
         return true

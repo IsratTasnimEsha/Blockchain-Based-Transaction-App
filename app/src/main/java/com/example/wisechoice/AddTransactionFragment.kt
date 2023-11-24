@@ -144,7 +144,7 @@ class AddTransactionFragment : Fragment(), NavigationView.OnNavigationItemSelect
                 }
 
                 override fun onCancelled(error: DatabaseError) {
-                    // Handle database error if needed
+
                 }
             })
     }
@@ -170,6 +170,8 @@ class AddTransactionFragment : Fragment(), NavigationView.OnNavigationItemSelect
 
         minersRef.addListenerForSingleValueEvent(object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
+                val phoneNumbers = snapshot.children.mapNotNull { it.key }
+
                 var receiverExists = false
                 var senderBalance = 0.0
 
@@ -179,8 +181,90 @@ class AddTransactionFragment : Fragment(), NavigationView.OnNavigationItemSelect
                         receiverExists = true
                     }
                     if (phone == st_phone) {
-                        senderBalance = childSnapshot.child("Users_Balance").child(st_phone)
-                            .child("Initial").value.toString().toDoubleOrNull() ?: 0.0
+                        val random1 = phoneNumbers.filter { it != st_phone }.random()
+                        val random2 = phoneNumbers.filter { it != st_phone }.random()
+                        val random3 = phoneNumbers.filter { it != st_phone }.random()
+                        val random4 = phoneNumbers.filter { it != st_phone }.random()
+
+                        val balance1 =
+                            snapshot.child(random1).child("Users_Balance").child(st_phone)
+                        val balance2 =
+                            snapshot.child(random2).child("Users_Balance").child(st_phone)
+                        val balance3 =
+                            snapshot.child(random3).child("Users_Balance").child(st_phone)
+                        val balance4 =
+                            snapshot.child(random4).child("Users_Balance").child(st_phone)
+                        val balance =
+                            snapshot.child(st_phone).child("Users_Balance").child(st_phone)
+
+                        if(balance1.value == balance2.value && balance2.value == balance3.value &&
+                            balance3.value == balance4.value) {
+
+                            if(balance.value != balance1.value) {
+                                databaseReference.child("miners").child(st_phone).child("Users_Balance")
+                                    .child(st_phone).setValue(balance1.value)
+
+                                Toast.makeText(context,
+                                    "Your Data Was Corrupted. We Have Fixed It. Please Try Again To Transact",
+                                    Toast.LENGTH_SHORT).show()
+                            }
+                            else {
+                                var  initialBalance= childSnapshot.child("Users_Balance").child(st_phone)
+                                    .child("Initial").value.toString().toDoubleOrNull() ?: 0.0
+
+                                var  sentBalance= childSnapshot.child("Users_Balance").child(st_phone)
+                                    .child("Sent").value.toString().toDoubleOrNull() ?: 0.0
+
+                                var minedBalance = 0.0
+
+                                val minedAmountSnapshot = childSnapshot.child("Users_Balance")
+                                    .child(st_phone).child("Mined_Amount")
+
+                                for (minedAmountChildSnapshot in minedAmountSnapshot.children) {
+                                    val childValue = minedAmountChildSnapshot.value
+                                    if (childValue is Number) {
+                                        minedBalance += childValue.toDouble()
+                                    }
+                                }
+
+                                var receivedBalance = 0.0
+
+                                val receivedAmountSnapshot = childSnapshot.child("Users_Balance")
+                                    .child(st_phone).child("Received_Amount")
+
+                                for (receivedAmountChildSnapshot in receivedAmountSnapshot.children) {
+                                    val childValue = receivedAmountChildSnapshot.value
+                                    if (childValue is Number) {
+                                        receivedBalance += childValue.toDouble()
+                                    }
+                                }
+
+                                senderBalance = initialBalance + minedBalance + receivedBalance - sentBalance
+
+                                databaseReference.child("miners").child(st_phone)
+                                    .child("Balance").setValue(senderBalance.toString())
+
+                                if (st_amount + st_fees > senderBalance) {
+
+                                    Toast.makeText(requireContext(), "Your Account's Balance is " + senderBalance +
+                                            ". Insufficient to Perform This Transaction.",
+                                        Toast.LENGTH_SHORT).show()
+                                    return
+                                }
+
+                                val newBalance = st_amount + st_fees
+
+                                databaseReference.child("miners").child(st_phone)
+                                    .child("Balance").setValue((senderBalance - newBalance).toString())
+
+                                updateSenderBalance(newBalance, st_amount, st_fees, st_receiver, st_signature,formattedDateTime)
+                            }
+                        }
+
+                        else {
+                            Toast.makeText(context,
+                                "Someone Has Corrupted Data. Please Try Again To Transact", Toast.LENGTH_SHORT).show()
+                        }
                     }
                 }
 
@@ -188,26 +272,16 @@ class AddTransactionFragment : Fragment(), NavigationView.OnNavigationItemSelect
                     Toast.makeText(requireContext(), "Receiver does not exist.", Toast.LENGTH_SHORT).show()
                     return
                 }
-
-                if (st_amount + st_fees > senderBalance) {
-                    Toast.makeText(requireContext(), "Insufficient balance to perform the transaction.", Toast.LENGTH_SHORT).show()
-                    return
-                }
-
-                // Transaction is ready to be performed...
-                val newBalance = st_amount + st_fees
-
-                // Proceed with updating the sender's balance and the transaction details...
-                updateSenderBalance(newBalance, st_amount, st_fees, st_receiver, st_signature,formattedDateTime)
             }
 
             override fun onCancelled(error: DatabaseError) {
-                // Handle database error if needed
+
             }
         })
     }
 
-    private fun updateSenderBalance(newBalance: Double, amount: Double, fees: Double, receiver: String, signature: String, formattedDateTime: String) {
+    private fun updateSenderBalance(newBalance: Double, amount: Double, fees: Double, receiver: String, signature: String,
+                                    formattedDateTime: String) {
         val sharedPreferences = requireContext().getSharedPreferences("MySharedPref", Context.MODE_PRIVATE)
         val st_phone = sharedPreferences.getString("Phone", "") ?: ""
 
@@ -323,7 +397,7 @@ class AddTransactionFragment : Fragment(), NavigationView.OnNavigationItemSelect
 
                 val intent = Intent(requireContext(), SignInActivity::class.java)
                 startActivity(intent)
-                requireActivity().finish() // Finish the current activity
+                requireActivity().finish()
             }
         }
         return true

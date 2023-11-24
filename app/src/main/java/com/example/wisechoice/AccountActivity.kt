@@ -41,9 +41,9 @@ class AccountActivity : AppCompatActivity() {
                     val str_uname = snapshot.child("User_Name").value as String?
                     name?.setText(str_uname)
                     val str_phone = snapshot.child("Phone").value as String?
-                    phone?.setText(str_phone)
-                    val str_balance = snapshot.child("Users_Balance").child(st_phone).child("Initial").value
-                    balance?.setText(str_balance.toString())
+                    phone?.setText("Phone: " + str_phone)
+                    val str_balance = snapshot.child("Balance").value as String?
+                    balance?.setText("Balance: " + str_balance.toString())
                 }
 
                 override fun onCancelled(error: DatabaseError) {}
@@ -68,14 +68,14 @@ class AccountActivity : AppCompatActivity() {
                             Toast.LENGTH_SHORT
                         ).show()
                     } else {
-                        // if (st_new.length < 6) {
-                        //    p_new!!.error = "Password Must Be At Least 6 Characters."
-                        //    Toast.makeText(
-                        //        this@AccountActivity,
-                        //        "Password Must Be At Least 6 Characters.",
-                        //        Toast.LENGTH_SHORT
-                        //    ).show()
-                        //}
+                         if (st_new.length < 6) {
+                            p_new!!.error = "Password Must Be At Least 6 Characters."
+                            Toast.makeText(
+                                this@AccountActivity,
+                                "Password Must Be At Least 6 Characters.",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        }
                         if (st_new != st_confirm) {
                             p_confirm!!.error = "Password Didn't Matched."
                             Toast.makeText(

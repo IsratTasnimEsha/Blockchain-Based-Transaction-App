@@ -318,7 +318,7 @@ class MineFragment : Fragment(), NavigationView.OnNavigationItemSelectedListener
                         }
 
                         override fun onCancelled(databaseError: DatabaseError) {
-                            // Handle onCancelled event
+
                         }
                     })
                 }
@@ -522,6 +522,10 @@ class MineFragment : Fragment(), NavigationView.OnNavigationItemSelectedListener
                                                             transactionSnapshot.child(
                                                                 "Amount"
                                                             ).value.toString()
+                                                        val fees =
+                                                            transactionSnapshot.child(
+                                                                "Fees"
+                                                            ).value.toString()
                                                         val receiver =
                                                             transactionSnapshot.child(
                                                                 "Receiver"
@@ -550,18 +554,15 @@ class MineFragment : Fragment(), NavigationView.OnNavigationItemSelectedListener
                                                                 .child("Mined_Amount")
 
                                                         previousMinerBalanceRef.child(
-                                                            previousBlockID.toString()
-                                                        )
-                                                            .setValue(
-                                                                previousTotalFees.toString()
-                                                            )
+                                                            transactionID.toString()
+                                                        ).setValue(fees)
                                                     }
                                                 }
 
                                                 override fun onCancelled(
                                                     databaseError: DatabaseError
                                                 ) {
-                                                    // Handle potential errors here
+
                                                 }
                                             })
 
@@ -812,17 +813,11 @@ class MineFragment : Fragment(), NavigationView.OnNavigationItemSelectedListener
                                         val grandChildInfo =
                                             "Sender: $sender, Receiver: $receiver, Amount: $amount, Fees: $fees"
 
-                                        // Add the grandchild string to the list
                                         transactionInfoList.add(grandChildInfo)
                                     }
 
                                     val finalTransactionInfo =
                                         transactionInfoList.joinToString(separator = "")
-
-                                    Toast.makeText(
-                                        context,
-                                        "$total_amount $total_fees", Toast.LENGTH_SHORT
-                                    ).show()
 
                                     val hashed =
                                         hashString("$previousNonce$previousMiner$finalTransactionInfo$total_amount$total_fees")

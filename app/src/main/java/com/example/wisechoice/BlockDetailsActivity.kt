@@ -382,9 +382,6 @@ class BlockDetailsActivity : AppCompatActivity() {
                                 .child(st_phone)
                                 .child("block_queue").removeValue()
 
-                            //FirebaseDatabase.getInstance().getReference("miners").child(st_phone)
-                            //    .child("block_queue").child(st_id).removeValue()
-
                             Toast.makeText(
                                 this@BlockDetailsActivity,
                                 "This Block Has Been Added To Your Blockchain Successfully. " +

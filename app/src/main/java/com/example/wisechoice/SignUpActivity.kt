@@ -169,11 +169,19 @@ class SignUpActivity : AppCompatActivity() {
                                                             .setValue(lastChild.value)
                                                     }
 
-                                                    databaseReference.child("miners").child(st_phone).child("User_Name").setValue(st_name)
-                                                    databaseReference.child("miners").child(st_phone).child("Phone").setValue(st_phone)
-                                                    databaseReference.child("miners").child(st_phone).child("Password").setValue(st_pass)
-                                                    databaseReference.child("miners").child(st_phone).child("Public_Key").setValue(Base64.getEncoder().encodeToString(publicKey.encoded))
-                                                    databaseReference.child("miners").child(st_phone).child("Private_Key").setValue(r_privateKey)
+                                                    databaseReference.child("miners").child(st_phone)
+                                                        .child("User_Name").setValue(st_name)
+                                                    databaseReference.child("miners").child(st_phone)
+                                                        .child("Phone").setValue(st_phone)
+                                                    databaseReference.child("miners").child(st_phone)
+                                                        .child("Balance").setValue("100")
+                                                    databaseReference.child("miners").child(st_phone)
+                                                        .child("Password").setValue(st_pass)
+                                                    databaseReference.child("miners").child(st_phone)
+                                                        .child("Public_Key")
+                                                        .setValue(Base64.getEncoder().encodeToString(publicKey.encoded))
+                                                    databaseReference.child("miners").child(st_phone)
+                                                        .child("Private_Key").setValue(r_privateKey)
 
                                                     databaseReference.child("miners")
                                                         .addListenerForSingleValueEvent(object : ValueEventListener {
@@ -197,25 +205,29 @@ class SignUpActivity : AppCompatActivity() {
                                                             }
                                                         })
 
-                                                    val userReference = databaseReference.child("PublicKeys").child(st_phone)
+                                                    val userReference = databaseReference.child("PublicKeys")
+                                                        .child(st_phone)
                                                     userReference.child("User_Name").setValue(st_name)
                                                     userReference.child("Phone").setValue(st_phone)
-                                                    userReference.child("Public_Key").setValue(Base64.getEncoder().encodeToString(publicKey.encoded))
+                                                    userReference.child("Public_Key")
+                                                        .setValue(Base64.getEncoder().encodeToString(publicKey.encoded))
 
-                                                    val intent = Intent(this@SignUpActivity, SignInActivity::class.java)
+                                                    val intent = Intent(this@SignUpActivity,
+                                                        SignInActivity::class.java)
                                                     startActivity(intent)
                                                 }
                                             }
 
                                             else {
                                                 Toast.makeText(this@SignUpActivity,
-                                                    "Someone Has Corrupted Data. Please Try Again To Sign Up", Toast.LENGTH_SHORT).show()
+                                                    "Someone Has Corrupted Data. Please Try Again To Sign Up",
+                                                    Toast.LENGTH_SHORT).show()
                                             }
                                         }
                                     }
 
                                     override fun onCancelled(error: DatabaseError) {
-                                        // Handle onCancelled event
+
                                     }
                                 })
 
@@ -244,7 +256,6 @@ class SignUpActivity : AppCompatActivity() {
         databaseReference.child("miners").child(st_phone).child("Users_Balance")
             .child(st_phone).child("Sent").setValue(0.0)
 
-        // Additional code for PublicKeys node
         val userReference = databaseReference.child("PublicKeys").child(st_phone)
         userReference.child("User_Name").setValue(st_name)
         userReference.child("Phone").setValue(st_phone)

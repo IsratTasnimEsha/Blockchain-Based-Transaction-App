@@ -7,6 +7,8 @@ import android.widget.EditText
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import com.google.firebase.auth.EmailAuthProvider
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.FirebaseDatabase
@@ -51,50 +53,63 @@ class AccountActivity : AppCompatActivity() {
     }
 
     fun passwordPage(view: View) {
-        val sharedPreferences = this.getSharedPreferences("MySharedPref", Context.MODE_PRIVATE)
-        val st_phone = sharedPreferences.getString("Phone", "") ?: ""
+        val auth = FirebaseAuth.getInstance()
 
-        databaseReference.child("miners").child(st_phone)
-            .addListenerForSingleValueEvent(object : ValueEventListener {
-                override fun onDataChange(snapshot: DataSnapshot) {
-                    val str_old = snapshot.child("Password").value as String?
-                    val st_old = p_old!!.text.toString()
-                    val st_new = p_new!!.text.toString()
-                    val st_confirm = p_confirm!!.text.toString()
-                    if (str_old != st_old) {
-                        p_old!!.error = "Password Is Incorrect."
-                        Toast.makeText(
-                            this@AccountActivity, "Password Didn't Matched.",
-                            Toast.LENGTH_SHORT
-                        ).show()
-                    } else {
-                         if (st_new.length < 6) {
-                            p_new!!.error = "Password Must Be At Least 6 Characters."
-                            Toast.makeText(
-                                this@AccountActivity,
-                                "Password Must Be At Least 6 Characters.",
-                                Toast.LENGTH_SHORT
-                            ).show()
-                        }
-                        if (st_new != st_confirm) {
-                            p_confirm!!.error = "Password Didn't Matched."
-                            Toast.makeText(
-                                this@AccountActivity, "Password Didn't Matched.",
-                                Toast.LENGTH_SHORT
-                            ).show()
+        val user = auth.currentUser
+
+        val oldPassword = p_old?.text.toString()
+        val newPassword = p_new?.text.toString()
+        val confirmPassword = p_confirm?.text.toString()
+
+        if (oldPassword.isEmpty() || newPassword.isEmpty() || confirmPassword.isEmpty()) {
+            Toast.makeText(
+                applicationContext,
+                "Fill All The Fields.",
+                Toast.LENGTH_SHORT
+            ).show()
+        }
+
+        else {
+
+            if (newPassword == confirmPassword) {
+
+                val credential = EmailAuthProvider.getCredential(user?.email!!, oldPassword)
+                user.reauthenticate(credential)
+                    .addOnCompleteListener { reauthTask ->
+                        if (reauthTask.isSuccessful) {
+
+                            user.updatePassword(newPassword)
+                                .addOnCompleteListener { updateTask ->
+                                    if (updateTask.isSuccessful) {
+                                        Toast.makeText(
+                                            applicationContext,
+                                            "Password updated successfully",
+                                            Toast.LENGTH_SHORT
+                                        ).show()
+                                    } else {
+                                        Toast.makeText(
+                                            applicationContext,
+                                            "Failed to update password",
+                                            Toast.LENGTH_SHORT
+                                        ).show()
+                                    }
+                                }
                         } else {
-                            databaseReference.child("miners").child(st_phone).child("Password")
-                                .setValue(st_new)
                             Toast.makeText(
-                                this@AccountActivity, "Password Has Been Changed.",
+                                applicationContext,
+                                "Reauthentication failed",
                                 Toast.LENGTH_SHORT
                             ).show()
                         }
                     }
-                }
-
-                override fun onCancelled(error: DatabaseError) {}
-            })
+            } else {
+                Toast.makeText(
+                    applicationContext,
+                    "New password and confirm password do not match",
+                    Toast.LENGTH_SHORT
+                ).show()
+            }
+        }
     }
     fun samePage(view: View) {
         val sharedPreferences = this.getSharedPreferences("MySharedPref", Context.MODE_PRIVATE)

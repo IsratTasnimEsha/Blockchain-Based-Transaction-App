@@ -161,21 +161,20 @@ class BlockchainActivity : AppCompatActivity() , NavigationView.OnNavigationItem
                 total_sents.clear()
                 mined_times.clear()
 
-                for (dataSnapshot in snapshot.children) {
-                    val hash = dataSnapshot.child("Block_Hash").value.toString()
-                    if(hash != "000000000000000000000000000000000000000000000000000000000000000000") {
-                        val id = dataSnapshot.child("Block_ID").value.toString()
-                        val miner = dataSnapshot.child("Miner").value.toString()
-                        val transaction = dataSnapshot.child("No_Of_Transactions").value.toString()
-                        val sent = dataSnapshot.child("Total_Amount").value.toString()
-                        val time = dataSnapshot.child("Mined_Time").value.toString()
+                val reversedSnapshot = snapshot.children.reversed()
 
-                        ids.add(id)
-                        miners.add(miner)
-                        no_of_transactionss.add(transaction)
-                        total_sents.add(sent)
-                        mined_times.add(time)
-                    }
+                for (dataSnapshot in reversedSnapshot) {
+                    val id = dataSnapshot.child("Block_ID").value.toString()
+                    val miner = dataSnapshot.child("Miner").value.toString()
+                    val transaction = dataSnapshot.child("No_Of_Transactions").value.toString()
+                    val sent = dataSnapshot.child("Total_Amount").value.toString()
+                    val time = dataSnapshot.child("Mined_Time").value.toString()
+
+                    ids.add(id)
+                    miners.add(miner)
+                    no_of_transactionss.add(transaction)
+                    total_sents.add(sent)
+                    mined_times.add(time)
                 }
                 adapterClass.notifyDataSetChanged()
             }

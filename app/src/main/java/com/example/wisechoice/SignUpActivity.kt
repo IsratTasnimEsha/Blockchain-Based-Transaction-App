@@ -108,7 +108,7 @@ class SignUpActivity : AppCompatActivity() {
 
                                     if (phoneNumbers.isEmpty()) {
                                         saveNewUser(
-                                            st_name, st_phone, st_pass,
+                                            st_name, st_phone,
                                             Base64.getEncoder()
                                                 .encodeToString(publicKey.encoded))
 
@@ -186,8 +186,6 @@ class SignUpActivity : AppCompatActivity() {
                                                 databaseReference.child("miners").child(st_phone)
                                                     .child("Balance").setValue("100")
                                                 databaseReference.child("miners").child(st_phone)
-                                                    .child("Password").setValue(st_pass)
-                                                databaseReference.child("miners").child(st_phone)
                                                     .child("Public_Key")
                                                     .setValue(Base64.getEncoder().encodeToString(publicKey.encoded))
                                                 databaseReference.child("miners").child(st_phone)
@@ -255,10 +253,9 @@ class SignUpActivity : AppCompatActivity() {
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
-    private fun saveNewUser(st_name: String, st_phone: String, st_pass: String, publicKey: Any) {
+    private fun saveNewUser(st_name: String, st_phone: String, publicKey: Any) {
         databaseReference.child("miners").child(st_phone).child("User_Name").setValue(st_name)
         databaseReference.child("miners").child(st_phone).child("Phone").setValue(st_phone)
-        databaseReference.child("miners").child(st_phone).child("Password").setValue(st_pass)
         databaseReference.child("miners").child(st_phone).child("Public_Key")
             .setValue(publicKey)
         databaseReference.child("miners").child(st_phone).child("Private_Key").setValue(r_privateKey)

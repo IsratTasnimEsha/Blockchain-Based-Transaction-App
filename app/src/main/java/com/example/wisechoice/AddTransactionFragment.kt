@@ -175,7 +175,8 @@ class AddTransactionFragment : Fragment(), NavigationView.OnNavigationItemSelect
 
                 for (childSnapshot in snapshot.children) {
                     val phone = childSnapshot.key.toString()
-                    if (phone.toString() == st_receiver.toString()) {
+
+                    if (phone == st_receiver) {
                         receiverExists = true
 
                         val random1 = phoneNumbers.filter { it != st_phone }.random()
@@ -224,6 +225,18 @@ class AddTransactionFragment : Fragment(), NavigationView.OnNavigationItemSelect
                                     }
                                 }
 
+                                var feesBalance = 0.0
+
+                                val feesAmountSnapshot = childSnapshot.child("Users_Balance")
+                                    .child(st_phone).child("Fees_Amount")
+
+                                for (feesAmountChildSnapshot in feesAmountSnapshot.children) {
+                                    val childValue = feesAmountChildSnapshot.value
+                                    if (childValue is Number) {
+                                        feesBalance += childValue.toDouble()
+                                    }
+                                }
+
                                 var receivedBalance = 0.0
 
                                 val receivedAmountSnapshot = childSnapshot.child("Users_Balance")
@@ -236,7 +249,7 @@ class AddTransactionFragment : Fragment(), NavigationView.OnNavigationItemSelect
                                     }
                                 }
 
-                                senderBalance = initialBalance + minedBalance + receivedBalance - sentBalance
+                                senderBalance = initialBalance + minedBalance + feesBalance + receivedBalance - sentBalance
 
                                 databaseReference.child("miners").child(st_phone)
                                     .child("Balance").setValue(senderBalance.toString())
@@ -262,12 +275,6 @@ class AddTransactionFragment : Fragment(), NavigationView.OnNavigationItemSelect
                             Toast.makeText(context,
                                 "Someone Has Corrupted Data. Please Try Again To Transact", Toast.LENGTH_SHORT).show()
                         }
-
-                        return
-                    }
-                    else {
-                        Toast.makeText(requireContext(), "Receiver Doesn't Exists." + phone + st_receiver, Toast.LENGTH_SHORT).show()
-                        return
                     }
                 }
 

@@ -29,6 +29,7 @@ import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
 import java.security.KeyFactory
+import java.security.MessageDigest
 import java.security.Signature
 import java.security.spec.X509EncodedKeySpec
 import java.util.Base64
@@ -94,8 +95,8 @@ class TempBlockAdapter(
     @RequiresApi(Build.VERSION_CODES.O)
     override fun onBindViewHolder(holder: MyViewHolder, position: Int) {
 
-        holder.sender.text = "${senders[position]}"
-        holder.receiver.text = "${receivers[position]}"
+        holder.sender.text = "${hashText(senders[position])}.."
+        holder.receiver.text = "${hashText(receivers[position])}.."
         holder.amount.text = "${amounts[position]}"
         holder.fees.text = "${feeses[position]}"
         holder.verify.text = "${verifies[position]}"
@@ -246,6 +247,22 @@ class TempBlockAdapter(
             intent.putExtra("transaction_id", idValue)
             context.startActivity(intent)
         }
+    }
+
+    private fun hashText(text: String): String {
+        val digest = MessageDigest.getInstance("SHA-256")
+        val hashedBytes = digest.digest(text.toByteArray())
+        return bytesToHex(hashedBytes).substring(0, 3)
+    }
+
+    private fun bytesToHex(bytes: ByteArray): String {
+        val hexChars = CharArray(bytes.size * 2)
+        for (i in bytes.indices) {
+            val v = bytes[i].toInt() and 0xFF
+            hexChars[i * 2] = "0123456789ABCDEF"[v ushr 4]
+            hexChars[i * 2 + 1] = "0123456789ABCDEF"[v and 0x0F]
+        }
+        return String(hexChars)
     }
 
     private fun checkBlockchain(path: String) {

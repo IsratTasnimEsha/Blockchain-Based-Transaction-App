@@ -12,6 +12,7 @@ import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
 import com.example.wisechoice.R
+import java.security.MessageDigest
 
 class TransactionDetailsActivity : AppCompatActivity() {
 
@@ -68,9 +69,9 @@ class TransactionDetailsActivity : AppCompatActivity() {
                     val blockNo = snapshot.child("Block_No").value.toString()
 
                     transactionIDTextView.text = transactionID
-                    senderTextView.text = sender
+                    senderTextView.text = hashText(sender)
                     signatureTextView.text = signature
-                    receiverTextView.text = receiver
+                    receiverTextView.text = hashText(receiver)
                     amountTextView.text = amount
                     feesTextView.text = fees
                     statusTextView.text = status
@@ -83,5 +84,21 @@ class TransactionDetailsActivity : AppCompatActivity() {
 
             }
         })
+    }
+
+    private fun hashText(text: String): String {
+        val digest = MessageDigest.getInstance("SHA-256")
+        val hashedBytes = digest.digest(text.toByteArray())
+        return bytesToHex(hashedBytes)
+    }
+
+    private fun bytesToHex(bytes: ByteArray): String {
+        val hexChars = CharArray(bytes.size * 2)
+        for (i in bytes.indices) {
+            val v = bytes[i].toInt() and 0xFF
+            hexChars[i * 2] = "0123456789ABCDEF"[v ushr 4]
+            hexChars[i * 2 + 1] = "0123456789ABCDEF"[v and 0x0F]
+        }
+        return String(hexChars)
     }
 }

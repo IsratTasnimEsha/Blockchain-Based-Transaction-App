@@ -93,6 +93,7 @@ class MineFragment : Fragment(), NavigationView.OnNavigationItemSelectedListener
     private lateinit var recyclerView: RecyclerView
     private lateinit var adapterClass: MineBlockAdapter
     private lateinit var mineButton: Button
+    private lateinit var cancelButton: Button
     private lateinit var hashText: TextView
 
     private val senders = mutableListOf<String>()
@@ -162,6 +163,14 @@ class MineFragment : Fragment(), NavigationView.OnNavigationItemSelectedListener
         recyclerView.adapter = adapterClass
 
         mineButton = view.findViewById(R.id.mine_button)
+        cancelButton = view.findViewById(R.id.cancel_button)
+
+        mineButton.setOnClickListener {
+            val st_phone = sharedPreferences.getString("Phone", "") ?: ""
+
+            FirebaseDatabase.getInstance().getReference("miners")
+                .child(st_phone).child("temporary_blocks").removeValue()
+        }
 
         hashText = view.findViewById(R.id.hash_text)
 
@@ -169,8 +178,7 @@ class MineFragment : Fragment(), NavigationView.OnNavigationItemSelectedListener
             val st_phone = sharedPreferences.getString("Phone", "") ?: ""
 
             val tempBlockchainRef = FirebaseDatabase.getInstance().getReference("miners")
-                .child(st_phone)
-                .child("temporary_blocks")
+                .child(st_phone).child("temporary_blocks")
 
             tempBlockchainRef.addListenerForSingleValueEvent(object : ValueEventListener {
                 override fun onDataChange(snapshot: DataSnapshot) {
@@ -543,19 +551,29 @@ class MineFragment : Fragment(), NavigationView.OnNavigationItemSelectedListener
                                                             transactionID.toString()
                                                         ).setValue(amount)
 
+                                                        val feesBalanceRef =
+                                                            FirebaseDatabase.getInstance()
+                                                                .getReference("miners")
+                                                                .child(phone)
+                                                                .child("Users_Balance")
+                                                                .child(receiver)
+                                                                .child("Fees_Amount")
+
+                                                        feesBalanceRef.child(
+                                                            transactionID.toString()
+                                                        ).setValue(fees)
+
                                                         val previousMinerBalanceRef =
                                                             FirebaseDatabase.getInstance()
                                                                 .getReference("miners")
                                                                 .child(phone)
                                                                 .child("Users_Balance")
-                                                                .child(
-                                                                    previousMiner.toString()
-                                                                )
+                                                                .child(previousMiner.toString())
                                                                 .child("Mined_Amount")
 
                                                         previousMinerBalanceRef.child(
                                                             transactionID.toString()
-                                                        ).setValue(fees)
+                                                        ).setValue("5")
                                                     }
                                                 }
 
@@ -823,12 +841,6 @@ class MineFragment : Fragment(), NavigationView.OnNavigationItemSelectedListener
                                         hashString("$previousNonce$previousMiner$finalTransactionInfo$total_amount$total_fees")
 
                                     if (hashed == previousHash) {
-                                        Toast.makeText(
-                                            context,
-                                            "$total_amount $total_fees",
-                                            Toast.LENGTH_SHORT
-                                        ).show()
-
                                         removeNulls()
                                         performMining()
                                         removeNulls()

@@ -95,8 +95,17 @@ class TempBlockAdapter(
     @RequiresApi(Build.VERSION_CODES.O)
     override fun onBindViewHolder(holder: MyViewHolder, position: Int) {
 
-        holder.sender.text = "${hashText(senders[position])}.."
-        holder.receiver.text = "${hashText(receivers[position])}.."
+        val sharedPreferences = context.getSharedPreferences("MySharedPref", Context.MODE_PRIVATE)
+        val st_phone = sharedPreferences.getString("Account", "") ?: ""
+
+        if("${senders[position]}" == st_phone || "${receivers[position]}" == st_phone) {
+            holder.sender.text = "${senders[position]}"
+            holder.receiver.text = "${receivers[position]}"
+        }
+        else {
+            holder.sender.text = "${hashText(senders[position])}.."
+            holder.receiver.text = "${hashText(receivers[position])}.."
+        }
         holder.amount.text = "${amounts[position]}"
         holder.fees.text = "${feeses[position]}"
         holder.verify.text = "${verifies[position]}"
@@ -245,6 +254,7 @@ class TempBlockAdapter(
             val intent = Intent(context, TransactionDetailsActivity::class.java)
 
             intent.putExtra("transaction_id", idValue)
+            intent.putExtra("activity", "not_inbox")
             context.startActivity(intent)
         }
     }
@@ -554,6 +564,10 @@ class AddToBlockFragment : Fragment(), NavigationView.OnNavigationItemSelectedLi
             }
             R.id.transaction -> {
                 val intent = Intent(requireContext(), MinerTransactionActivity::class.java)
+                startActivity(intent)
+            }
+            R.id.inbox -> {
+                val intent = Intent(requireContext(), InboxActivity::class.java)
                 startActivity(intent)
             }
             R.id.rejected -> {

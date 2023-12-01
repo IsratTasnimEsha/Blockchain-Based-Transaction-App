@@ -54,8 +54,7 @@ class NotificationAdapter(
 
         if("${messages[position]}" != st_phone && "${activities[position]}" == "BlockDetailsActivity") {
             holder.message.text = "Block Queue Alert: " +
-                    "${messages[position]}" +
-                    " Has Mined a New Block! " +
+                    "Someone Has Mined a New Block! " +
                     "Ready to Explore?"
         }
 
@@ -66,8 +65,7 @@ class NotificationAdapter(
 
         if("${messages[position]}" != st_phone && "${activities[position]}" == "BlockchainDetailsActivity") {
             holder.message.text = "Blockchain Update: " +
-                    "${messages[position]}" +
-                    "'s Block Now in the Chain." +
+                    "A New Block is Now in the Chain." +
                     "! Curious to Check It Out?"
         }
 

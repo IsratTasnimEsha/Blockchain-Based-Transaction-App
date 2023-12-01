@@ -26,7 +26,6 @@ class BlockchainDetailsAdapter(
     private val receivers: List<String>,
     private val amounts: List<String>,
     private val feeses: List<String>,
-    private val verifies: List<String>,
     private val ids: List<String>,
     private val transaction_times: List<String>,
     private val st_id: String,
@@ -42,29 +41,27 @@ class BlockchainDetailsAdapter(
 
     override fun onBindViewHolder(holder: MyViewHolder, position: Int) {
 
-        holder.sender.text = "${hashText(senders[position])}.."
-        holder.receiver.text = "${hashText(receivers[position])}.."
+        val sharedPreferences = context.getSharedPreferences("MySharedPref", Context.MODE_PRIVATE)
+        val st_phone = sharedPreferences.getString("Account", "") ?: ""
+
+        if("${senders[position]}" == st_phone || "${receivers[position]}" == st_phone) {
+            holder.sender.text = "${senders[position]}"
+            holder.receiver.text = "${receivers[position]}"
+        }
+        else {
+            holder.sender.text = "${hashText(senders[position])}.."
+            holder.receiver.text = "${hashText(receivers[position])}.."
+        }
         holder.amount.text = "${amounts[position]}"
         holder.fees.text = "${feeses[position]}"
         val idValue = ids[position]
-
-        if(verifies[position] == "Unrecognized") {
-            holder.transaction_card.setBackgroundColor(ContextCompat.getColor(context, R.color.white))
-        }
-
-        else if(verifies[position] == "Verified") {
-            holder.transaction_card.setBackgroundColor(ContextCompat.getColor(context, R.color.green))
-        }
-
-        else if(verifies[position] == "Not Verified") {
-            holder.transaction_card.setBackgroundColor(ContextCompat.getColor(context, R.color.dark_green ))
-        }
 
         holder.transaction_card.setOnClickListener {
 
             val intent = Intent(context, TransactionDetailsActivity::class.java)
 
             intent.putExtra("transaction_id", idValue)
+            intent.putExtra("activity", "not_inbox")
             context.startActivity(intent)
         }
     }
@@ -161,7 +158,6 @@ class BlockchainDetailsActivity : AppCompatActivity() {
             receivers,
             amounts,
             feeses,
-            verifies,
             ids,
             transaction_times,
             st_id
@@ -227,7 +223,12 @@ class BlockchainDetailsActivity : AppCompatActivity() {
                     blockHashTextView.text = blockHash
                     previousHashTextView.text = previousHash
                     nonceTextView.text = nonce
-                    minerTextView.text = miner
+                    if(miner == st_phone) {
+                        minerTextView.text = miner
+                    }
+                    else {
+                        minerTextView.text = hashText(miner)
+                    }
                     noOfTransactionsTextView.text = noOfTransactions
                     totalSentTextView.text = totalSent
                     sizeTextView.text = size
@@ -240,5 +241,21 @@ class BlockchainDetailsActivity : AppCompatActivity() {
 
             }
         })
+    }
+
+    private fun hashText(text: String): String {
+        val digest = MessageDigest.getInstance("SHA-256")
+        val hashedBytes = digest.digest(text.toByteArray())
+        return bytesToHex(hashedBytes)
+    }
+
+    private fun bytesToHex(bytes: ByteArray): String {
+        val hexChars = CharArray(bytes.size * 2)
+        for (i in bytes.indices) {
+            val v = bytes[i].toInt() and 0xFF
+            hexChars[i * 2] = "0123456789ABCDEF"[v ushr 4]
+            hexChars[i * 2 + 1] = "0123456789ABCDEF"[v and 0x0F]
+        }
+        return String(hexChars)
     }
 }

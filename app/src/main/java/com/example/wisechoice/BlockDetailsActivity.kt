@@ -90,8 +90,17 @@ class BlockDetailsAdapter(
     @RequiresApi(Build.VERSION_CODES.O)
     override fun onBindViewHolder(holder: MyViewHolder, position: Int) {
 
-        holder.sender.text = "${hashText(senders[position])}.."
-        holder.receiver.text = "${hashText(receivers[position])}.."
+        val sharedPreferences = context.getSharedPreferences("MySharedPref", Context.MODE_PRIVATE)
+        val st_phone = sharedPreferences.getString("Account", "") ?: ""
+
+        if("${senders[position]}" == st_phone || "${receivers[position]}" == st_phone) {
+            holder.sender.text = "${senders[position]}"
+            holder.receiver.text = "${receivers[position]}"
+        }
+        else {
+            holder.sender.text = "${hashText(senders[position])}.."
+            holder.receiver.text = "${hashText(receivers[position])}.."
+        }
         holder.amount.text = "${amounts[position]}"
         holder.fees.text = "${feeses[position]}"
         holder.verify.text = "${verifies[position]}"
@@ -155,6 +164,7 @@ class BlockDetailsAdapter(
             val intent = Intent(context, TransactionDetailsActivity::class.java)
 
             intent.putExtra("transaction_id", idValue)
+            intent.putExtra("activity", "not_inbox")
             context.startActivity(intent)
         }
     }
@@ -324,8 +334,12 @@ class BlockDetailsActivity : AppCompatActivity() {
                     blockHashTextView.text = blockHash
                     previousHashTextView.text = previousHash
                     nonceTextView.text = nonce
-                    minerTextView.text = miner
-
+                    if(miner == st_phone) {
+                        minerTextView.text = miner
+                    }
+                    else {
+                        minerTextView.text = hashText(miner)
+                    }
                     noOfTransactionsTextView.text = noOfTransactions
                     totalSentTextView.text = totalSent
                     sizeTextView.text = size
@@ -344,8 +358,20 @@ class BlockDetailsActivity : AppCompatActivity() {
         })
     }
 
-    private fun checkBlock(callback: (Boolean) -> Unit) {
+    private fun hashText(text: String): String {
+        val digest = MessageDigest.getInstance("SHA-256")
+        val hashedBytes = digest.digest(text.toByteArray())
+        return bytesToHex(hashedBytes)
+    }
 
+    private fun bytesToHex(bytes: ByteArray): String {
+        val hexChars = CharArray(bytes.size * 2)
+        for (i in bytes.indices) {
+            val v = bytes[i].toInt() and 0xFF
+            hexChars[i * 2] = "0123456789ABCDEF"[v ushr 4]
+            hexChars[i * 2 + 1] = "0123456789ABCDEF"[v and 0x0F]
+        }
+        return String(hexChars)
     }
 
     private fun acceptBlock() {

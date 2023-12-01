@@ -20,8 +20,6 @@ import androidx.core.view.GravityCompat
 import androidx.drawerlayout.widget.DrawerLayout
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.example.wisechoice.R
-import com.example.wisechoice.TransactionDetailsActivity
 import com.google.android.material.navigation.NavigationView
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
@@ -48,8 +46,19 @@ class MineBlockAdapter(
     }
 
     override fun onBindViewHolder(holder: MyViewHolder, position: Int) {
-        holder.sender.text = "${hashText(senders[position])}.."
-        holder.receiver.text = "${hashText(receivers[position])}.."
+
+        val sharedPreferences =
+            context.getSharedPreferences("MySharedPref", Context.MODE_PRIVATE)
+        val st_phone = sharedPreferences.getString("Account", "") ?: ""
+
+        if("${senders[position]}" == st_phone || "${receivers[position]}" == st_phone) {
+            holder.sender.text = "${senders[position]}"
+            holder.receiver.text = "${receivers[position]}"
+        }
+        else {
+            holder.sender.text = "${hashText(senders[position])}.."
+            holder.receiver.text = "${hashText(receivers[position])}.."
+        }
         holder.amount.text = "${amounts[position]}"
         holder.fees.text = "${feeses[position]}"
         val idValue = ids[position]
@@ -71,6 +80,7 @@ class MineBlockAdapter(
         holder.transaction_card.setOnClickListener {
             val intent = Intent(context, TransactionDetailsActivity::class.java)
             intent.putExtra("transaction_id", idValue)
+            intent.putExtra("activity", "not_inbox")
             context.startActivity(intent)
         }
     }
@@ -109,7 +119,6 @@ class MineFragment : Fragment(), NavigationView.OnNavigationItemSelectedListener
     private lateinit var recyclerView: RecyclerView
     private lateinit var adapterClass: MineBlockAdapter
     private lateinit var mineButton: Button
-    private lateinit var cancelButton: Button
     private lateinit var hashText: TextView
 
     private val senders = mutableListOf<String>()
@@ -554,10 +563,24 @@ class MineFragment : Fragment(), NavigationView.OnNavigationItemSelectedListener
                                                             transactionSnapshot.child(
                                                                 "Fees"
                                                             ).value.toString()
+                                                        val sender =
+                                                            transactionSnapshot.child(
+                                                                "Sender"
+                                                            ).value.toString()
                                                         val receiver =
                                                             transactionSnapshot.child(
                                                                 "Receiver"
                                                             ).value.toString()
+
+                                                        val inboxRef = FirebaseDatabase.getInstance()
+                                                            .getReference("miners").child(receiver)
+                                                            .child("inbox")
+                                                            .child(transactionID.toString())
+
+                                                        inboxRef.child("Amount").setValue(amount)
+                                                        inboxRef.child("Fees").setValue(fees)
+                                                        inboxRef.child("Sender").setValue(sender)
+                                                        inboxRef.child("Receiver").setValue(receiver)
 
                                                         val receiverBalanceRef =
                                                             FirebaseDatabase.getInstance()
@@ -985,6 +1008,12 @@ class MineFragment : Fragment(), NavigationView.OnNavigationItemSelectedListener
                 removeNulls()
 
                 val intent = Intent(requireContext(), MinerTransactionActivity::class.java)
+                startActivity(intent)
+            }
+            R.id.inbox -> {
+                removeNulls()
+
+                val intent = Intent(requireContext(), InboxActivity::class.java)
                 startActivity(intent)
             }
             R.id.rejected -> {

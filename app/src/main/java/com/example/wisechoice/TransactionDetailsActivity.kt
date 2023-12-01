@@ -17,6 +17,7 @@ import java.security.MessageDigest
 class TransactionDetailsActivity : AppCompatActivity() {
 
     private lateinit var st_id: String
+    private lateinit var st_activity: String
     private lateinit var transactionIDTextView: TextView
     private lateinit var senderTextView: TextView
     private lateinit var signatureTextView: TextView
@@ -44,6 +45,7 @@ class TransactionDetailsActivity : AppCompatActivity() {
         blockNoTextView = findViewById(R.id.block_no)
 
         st_id = intent.getStringExtra("transaction_id") ?: ""
+        st_activity = intent.getStringExtra("activity") ?: ""
 
         val sharedPreferences = getSharedPreferences("MySharedPref", Context.MODE_PRIVATE)
         val st_phone = sharedPreferences.getString("Account", "") ?: ""
@@ -69,9 +71,15 @@ class TransactionDetailsActivity : AppCompatActivity() {
                     val blockNo = snapshot.child("Block_No").value.toString()
 
                     transactionIDTextView.text = transactionID
-                    senderTextView.text = hashText(sender)
+                    if(st_activity == "activity" || sender == st_phone || receiver == st_phone) {
+                        senderTextView.text = sender
+                        receiverTextView.text = receiver
+                    }
+                    else {
+                        senderTextView.text = hashText(sender)
+                        receiverTextView.text = hashText(receiver)
+                    }
                     signatureTextView.text = signature
-                    receiverTextView.text = hashText(receiver)
                     amountTextView.text = amount
                     feesTextView.text = fees
                     statusTextView.text = status

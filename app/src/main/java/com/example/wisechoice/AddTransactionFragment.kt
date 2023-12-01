@@ -26,6 +26,7 @@ import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
+import com.google.firebase.database.ktx.values
 import java.security.KeyFactory
 import java.security.Signature
 import java.security.spec.PKCS8EncodedKeySpec
@@ -323,7 +324,19 @@ class AddTransactionFragment : Fragment(), NavigationView.OnNavigationItemSelect
                             })
 
                         val newTransactionRef = senderRef.child(phone).child("transactions").child(transactionKey!!)
+                        val inboxRef = senderRef.child(st_phone).child("inbox").child(transactionKey!!)
                         val refString = newTransactionRef.key
+
+                        inboxRef.apply {
+                            child("Amount").setValue(amount)
+                            child("Fees").setValue(fees)
+                            child("Receiver").setValue(receiver)
+                            child("Sender").setValue(st_phone)
+                            child("Signature").setValue(signature)
+                            child("Transaction_ID").setValue(refString.toString())
+                            child("Transaction_Time").setValue(formattedDateTime)
+                            child("Status").setValue("Unrecognized")
+                        }
 
                         newTransactionRef.apply {
                             child("Amount").setValue(amount)
@@ -332,11 +345,12 @@ class AddTransactionFragment : Fragment(), NavigationView.OnNavigationItemSelect
                             child("Sender").setValue(st_phone)
                             child("Signature").setValue(signature)
                             child("Transaction_ID").setValue(refString.toString())
-                            newTransactionRef.child("Transaction_Time").setValue(formattedDateTime)
+                            child("Transaction_Time").setValue(formattedDateTime)
                             child("Status").setValue("Unrecognized")
 
                             Toast.makeText(requireContext(), "The Transaction Has Occurred.", Toast.LENGTH_SHORT).show()
                         }
+
                     }
                 }
             }
@@ -383,7 +397,11 @@ class AddTransactionFragment : Fragment(), NavigationView.OnNavigationItemSelect
                 startActivity(intent)
             }
             R.id.transaction -> {
-                val intent = Intent(requireContext(), TransactionDetailsActivity::class.java)
+                val intent = Intent(requireContext(), MinerTransactionActivity::class.java)
+                startActivity(intent)
+            }
+            R.id.inbox -> {
+                val intent = Intent(requireContext(), InboxActivity::class.java)
                 startActivity(intent)
             }
             R.id.rejected -> {

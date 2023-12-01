@@ -22,6 +22,11 @@
         android:title="Rejected Blocks" />
 
     <item
+        android:id="@+id/inbox"
+        android:icon="@drawable/baseline_inbox_24"
+        android:title="Inbox" />
+
+    <item
         android:id="@+id/notifications"
         android:icon="@drawable/baseline_notifications_active_24"
         android:title="Notifications" />

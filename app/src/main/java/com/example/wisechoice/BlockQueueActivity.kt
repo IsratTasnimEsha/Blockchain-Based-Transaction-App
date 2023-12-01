@@ -26,6 +26,7 @@ import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
 import com.google.firebase.database.ktx.getValue
 import com.google.firebase.database.ktx.values
+import java.security.MessageDigest
 
 class BlockQueueAdapter(
     private val context: Context,
@@ -46,7 +47,16 @@ class BlockQueueAdapter(
 
     override fun onBindViewHolder(holder: MyViewHolder, position: Int) {
 
-        holder.miner.text = "${miners[position]}"
+        val sharedPreferences = context.getSharedPreferences("MySharedPref", Context.MODE_PRIVATE)
+        val st_phone = sharedPreferences.getString("Account", "") ?: ""
+
+        if("${miners[position]}" != st_phone) {
+            holder.miner.text = "${hashText(miners[position])}.."
+        }
+        else {
+            holder.miner.text = "${miners[position]}"
+        }
+
         holder.no_of_transactions.text = "${no_of_transactionss[position]}"
         holder.total_sent.text = "${total_sents[position]}"
         holder.mined_time.text = "${mined_times[position]}"
@@ -60,6 +70,22 @@ class BlockQueueAdapter(
             intent.putExtra("block_id", idValue)
             context.startActivity(intent)
         }
+    }
+
+    private fun hashText(text: String): String {
+        val digest = MessageDigest.getInstance("SHA-256")
+        val hashedBytes = digest.digest(text.toByteArray())
+        return bytesToHex(hashedBytes).substring(0, 3)
+    }
+
+    private fun bytesToHex(bytes: ByteArray): String {
+        val hexChars = CharArray(bytes.size * 2)
+        for (i in bytes.indices) {
+            val v = bytes[i].toInt() and 0xFF
+            hexChars[i * 2] = "0123456789ABCDEF"[v ushr 4]
+            hexChars[i * 2 + 1] = "0123456789ABCDEF"[v and 0x0F]
+        }
+        return String(hexChars)
     }
 
     override fun getItemCount(): Int {
@@ -94,7 +120,6 @@ class BlockQueueActivity : AppCompatActivity() , NavigationView.OnNavigationItem
 
     var username: TextView? = null
     var phone: TextView? = null
-    var photo: ImageView? = null
     var home_menu: ImageView? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -153,8 +178,14 @@ class BlockQueueActivity : AppCompatActivity() , NavigationView.OnNavigationItem
             override fun onDataChange(snapshot: DataSnapshot) {
                 for (childSnapshot in snapshot.children) {
                     var id = childSnapshot.key
+                    var miner_name = snapshot.child(id.toString()).child("Miner").getValue(String::class.java)
 
-                    b_miner.text = snapshot.child(id.toString()).child("Miner").getValue(String::class.java)
+                    if(miner_name.toString() == st_phone) {
+                        b_miner.text = miner_name
+                    }
+                    else {
+                        b_miner.text = hashText(miner_name.toString()) + ".."
+                    }
                     b_no.text = snapshot.child(id.toString()).child("No_Of_Transactions").getValue().toString()
                     b_sent .text = snapshot.child(id.toString()).child("Total_Amount").getValue().toString()
                     b_time.text = snapshot.child(id.toString()).child("Mined_Time").getValue(String::class.java)
@@ -275,6 +306,22 @@ class BlockQueueActivity : AppCompatActivity() , NavigationView.OnNavigationItem
         })
     }
 
+    private fun hashText(text: String): String {
+        val digest = MessageDigest.getInstance("SHA-256")
+        val hashedBytes = digest.digest(text.toByteArray())
+        return bytesToHex(hashedBytes).substring(0, 3)
+    }
+
+    private fun bytesToHex(bytes: ByteArray): String {
+        val hexChars = CharArray(bytes.size * 2)
+        for (i in bytes.indices) {
+            val v = bytes[i].toInt() and 0xFF
+            hexChars[i * 2] = "0123456789ABCDEF"[v ushr 4]
+            hexChars[i * 2 + 1] = "0123456789ABCDEF"[v and 0x0F]
+        }
+        return String(hexChars)
+    }
+
     override fun onNavigationItemSelected(item: MenuItem): Boolean {
         when (item.itemId) {
             R.id.block_queue -> {
@@ -287,6 +334,10 @@ class BlockQueueActivity : AppCompatActivity() , NavigationView.OnNavigationItem
             }
             R.id.transaction -> {
                 val intent = Intent(this, MinerTransactionActivity::class.java)
+                startActivity(intent)
+            }
+            R.id.inbox -> {
+                val intent = Intent(this, InboxActivity::class.java)
                 startActivity(intent)
             }
             R.id.rejected -> {

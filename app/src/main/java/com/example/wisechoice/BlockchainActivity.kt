@@ -23,6 +23,7 @@ import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
+import java.security.MessageDigest
 
 class BlockchainAdapter(
     private val context: Context,
@@ -43,7 +44,15 @@ class BlockchainAdapter(
 
     override fun onBindViewHolder(holder: MyViewHolder, position: Int) {
 
-        holder.miner.text = "${miners[position]}"
+        val sharedPreferences = context.getSharedPreferences("MySharedPref", Context.MODE_PRIVATE)
+        val st_phone = sharedPreferences.getString("Account", "") ?: ""
+
+        if("${miners[position]}" != st_phone) {
+            holder.miner.text = "${hashText(miners[position])}.."
+        }
+        else {
+            holder.miner.text = "${miners[position]}"
+        }
         holder.no_of_transactions.text = "${no_of_transactionss[position]}"
         holder.total_sent.text = "${total_sents[position]}"
         holder.mined_time.text = "${mined_times[position]}"
@@ -58,6 +67,22 @@ class BlockchainAdapter(
             intent.putExtra("path", "main_blockchain")
             context.startActivity(intent)
         }
+    }
+
+    private fun hashText(text: String): String {
+        val digest = MessageDigest.getInstance("SHA-256")
+        val hashedBytes = digest.digest(text.toByteArray())
+        return bytesToHex(hashedBytes).substring(0, 3)
+    }
+
+    private fun bytesToHex(bytes: ByteArray): String {
+        val hexChars = CharArray(bytes.size * 2)
+        for (i in bytes.indices) {
+            val v = bytes[i].toInt() and 0xFF
+            hexChars[i * 2] = "0123456789ABCDEF"[v ushr 4]
+            hexChars[i * 2 + 1] = "0123456789ABCDEF"[v and 0x0F]
+        }
+        return String(hexChars)
     }
 
     override fun getItemCount(): Int {
@@ -194,6 +219,10 @@ class BlockchainActivity : AppCompatActivity() , NavigationView.OnNavigationItem
             }
             R.id.transaction -> {
                 val intent = Intent(this, MinerTransactionActivity::class.java)
+                startActivity(intent)
+            }
+            R.id.inbox -> {
+                val intent = Intent(this, InboxActivity::class.java)
                 startActivity(intent)
             }
             R.id.rejected -> {

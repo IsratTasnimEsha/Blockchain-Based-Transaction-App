@@ -24,8 +24,8 @@
                 android:layout_weight="1"
                 android:text="Sender"
                 android:textStyle="bold"
-                android:paddingTop="10dp"
-                android:paddingBottom="10dp"
+                android:paddingTop="20dp"
+                android:paddingBottom="20dp"
                 android:gravity="center"/>
 
             <TextView

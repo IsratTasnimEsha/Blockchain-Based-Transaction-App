@@ -247,9 +247,6 @@ class SignUpActivity : AppCompatActivity() {
                                                                 .child("Account").setValue(st_phone)
                                                             databaseReference.child("miners")
                                                                 .child(st_phone)
-                                                                .child("Balance").setValue("100")
-                                                            databaseReference.child("miners")
-                                                                .child(st_phone)
                                                                 .child("Public_Key")
                                                                 .setValue(
                                                                     Base64.getEncoder()

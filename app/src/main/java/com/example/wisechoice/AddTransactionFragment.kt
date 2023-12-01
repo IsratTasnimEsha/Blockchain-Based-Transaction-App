@@ -251,9 +251,6 @@ class AddTransactionFragment : Fragment(), NavigationView.OnNavigationItemSelect
 
                                 senderBalance = initialBalance + minedBalance + feesBalance + receivedBalance - sentBalance
 
-                                databaseReference.child("miners").child(st_phone)
-                                    .child("Balance").setValue(senderBalance.toString())
-
                                 if (st_amount + st_fees > senderBalance) {
 
                                     Toast.makeText(requireContext(), "Your Account's Balance is " + senderBalance +
@@ -263,9 +260,6 @@ class AddTransactionFragment : Fragment(), NavigationView.OnNavigationItemSelect
                                 }
 
                                 val newBalance = st_amount + st_fees
-
-                                databaseReference.child("miners").child(st_phone)
-                                    .child("Balance").setValue((senderBalance - newBalance).toString())
 
                                 updateSenderBalance(newBalance, st_amount, st_fees, st_receiver, st_signature,formattedDateTime)
                             }

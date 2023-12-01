@@ -44,8 +44,61 @@ class AccountActivity : AppCompatActivity() {
                     name?.setText(str_uname)
                     val str_phone = snapshot.child("Account").value as String?
                     phone?.setText("Account No.: " + str_phone)
-                    val str_balance = snapshot.child("Balance").value as String?
-                    balance?.setText("Balance: " + str_balance.toString())
+
+                    val minersRef = databaseReference.child("miners").child(st_phone)
+
+                    minersRef.addListenerForSingleValueEvent(object : ValueEventListener {
+                        override fun onDataChange(childSnapshot: DataSnapshot) {
+                            var  initialBalance= childSnapshot.child("Users_Balance").child(st_phone)
+                                .child("Initial").value.toString().toDoubleOrNull() ?: 0.0
+
+                            var  sentBalance= childSnapshot.child("Users_Balance").child(st_phone)
+                                .child("Sent").value.toString().toDoubleOrNull() ?: 0.0
+
+                            var minedBalance = 0.0
+
+                            val minedAmountSnapshot = childSnapshot.child("Users_Balance")
+                                .child(st_phone).child("Mined_Amount")
+
+                            for (minedAmountChildSnapshot in minedAmountSnapshot.children) {
+                                val childValue = minedAmountChildSnapshot.value
+                                if (childValue is Number) {
+                                    minedBalance += childValue.toDouble()
+                                }
+                            }
+
+                            var feesBalance = 0.0
+
+                            val feesAmountSnapshot = childSnapshot.child("Users_Balance")
+                                .child(st_phone).child("Fees_Amount")
+
+                            for (feesAmountChildSnapshot in feesAmountSnapshot.children) {
+                                val childValue = feesAmountChildSnapshot.value
+                                if (childValue is Number) {
+                                    feesBalance += childValue.toDouble()
+                                }
+                            }
+
+                            var receivedBalance = 0.0
+
+                            val receivedAmountSnapshot = childSnapshot.child("Users_Balance")
+                                .child(st_phone).child("Received_Amount")
+
+                            for (receivedAmountChildSnapshot in receivedAmountSnapshot.children) {
+                                val childValue = receivedAmountChildSnapshot.value
+                                if (childValue is Number) {
+                                    receivedBalance += childValue.toDouble()
+                                }
+                            }
+
+                            val senderBalance = initialBalance + minedBalance + feesBalance + receivedBalance - sentBalance
+                            balance?.setText("Balance: " + senderBalance.toString())
+                        }
+
+                        override fun onCancelled(error: DatabaseError) {
+
+                        }
+                    })
                 }
 
                 override fun onCancelled(error: DatabaseError) {}

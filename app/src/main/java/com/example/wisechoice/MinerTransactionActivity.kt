@@ -27,7 +27,7 @@ class MinerTransactionActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_miner_transaction)
         val intent1 = intent
-        st_phone = intent1.getStringExtra("Phone")
+        st_phone = intent1.getStringExtra("Account")
 
         miner_bottom = findViewById<BottomNavigationView>(R.id.miner_bottom)
 

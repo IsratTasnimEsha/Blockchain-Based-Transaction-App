@@ -46,7 +46,7 @@ class TransactionDetailsActivity : AppCompatActivity() {
         st_id = intent.getStringExtra("transaction_id") ?: ""
 
         val sharedPreferences = getSharedPreferences("MySharedPref", Context.MODE_PRIVATE)
-        val st_phone = sharedPreferences.getString("Phone", "") ?: ""
+        val st_phone = sharedPreferences.getString("Account", "") ?: ""
 
         fetchTransactionDetails(st_phone)
     }

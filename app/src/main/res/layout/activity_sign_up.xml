@@ -54,20 +54,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginBottom="5dp"
-            app:cardCornerRadius="8dp">
-            <EditText
-                android:id="@+id/r_phone"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:background="@color/transparent"
-                android:drawableLeft="@drawable/baseline_phone_android_24"
-                android:drawablePadding="5dp"
-                android:padding="5dp"
-                android:ems="10"
-                android:hint="Phone"
-                android:inputType="phone"
-                android:minHeight="48dp" />
-        </androidx.cardview.widget.CardView>
+            app:cardCornerRadius="8dp"/>
 
         <androidx.cardview.widget.CardView
             android:layout_width="match_parent"

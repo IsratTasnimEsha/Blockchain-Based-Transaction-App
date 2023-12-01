@@ -118,7 +118,7 @@ class BlockDetailsAdapter(
         holder.verify_button.setOnClickListener {
             val sharedPreferences =
                 context.getSharedPreferences("MySharedPref", Context.MODE_PRIVATE)
-            val st_phone = sharedPreferences.getString("Phone", "") ?: ""
+            val st_phone = sharedPreferences.getString("Account", "") ?: ""
 
             if(holder.verify.text == "Unrecognized") {
                 retrieveSenderPublicKey(senders[position]) { publicKey ->
@@ -238,7 +238,7 @@ class BlockDetailsActivity : AppCompatActivity() {
         st_id = intent.getStringExtra("block_id") ?: ""
 
         val sharedPreferences = getSharedPreferences("MySharedPref", Context.MODE_PRIVATE)
-        val st_phone = sharedPreferences.getString("Phone", "") ?: ""
+        val st_phone = sharedPreferences.getString("Account", "") ?: ""
 
         fetchTransactionDetails(st_phone)
 
@@ -301,7 +301,7 @@ class BlockDetailsActivity : AppCompatActivity() {
 
     private fun fetchTransactionDetails(st_phone: String) {
         val sharedPreferences = this.getSharedPreferences("MySharedPref", Context.MODE_PRIVATE)
-        val st_phone = sharedPreferences.getString("Phone", "") ?: ""
+        val st_phone = sharedPreferences.getString("Account", "") ?: ""
 
         databaseReference = FirebaseDatabase.getInstance().getReference("miners").child(st_phone)
             .child("block_queue").child(st_id)
@@ -350,7 +350,7 @@ class BlockDetailsActivity : AppCompatActivity() {
 
     private fun acceptBlock() {
         val sharedPreferences = this.getSharedPreferences("MySharedPref", Context.MODE_PRIVATE)
-        val st_phone = sharedPreferences.getString("Phone", "") ?: ""
+        val st_phone = sharedPreferences.getString("Account", "") ?: ""
 
         val blockchainReference =
             FirebaseDatabase.getInstance().getReference("miners")

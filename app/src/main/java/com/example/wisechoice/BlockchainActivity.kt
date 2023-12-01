@@ -111,7 +111,6 @@ class BlockchainActivity : AppCompatActivity() , NavigationView.OnNavigationItem
         nView = navigationView?.getHeaderView(0)
         username = nView?.findViewById<TextView>(R.id.username)
         phone = nView?.findViewById<TextView>(R.id.phone)
-        photo = nView?.findViewById<ImageView>(R.id.photo)
         home_menu = findViewById<ImageView>(R.id.home_menu)
 
         home_menu?.setOnClickListener {
@@ -121,7 +120,7 @@ class BlockchainActivity : AppCompatActivity() , NavigationView.OnNavigationItem
         navigationView?.setNavigationItemSelectedListener(this)
 
         val sharedPreferences = this.getSharedPreferences("MySharedPref", Context.MODE_PRIVATE)
-        val st_phone = sharedPreferences.getString("Phone", "") ?: ""
+        val st_phone = sharedPreferences.getString("Account", "") ?: ""
 
         phone?.text = st_phone
         FirebaseDatabase.getInstance().getReference("miners").child(st_phone)

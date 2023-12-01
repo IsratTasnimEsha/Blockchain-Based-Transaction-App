@@ -35,15 +35,15 @@ class AccountActivity : AppCompatActivity() {
         p_confirm = findViewById(R.id.p_confirm)
 
         val sharedPreferences = this.getSharedPreferences("MySharedPref", Context.MODE_PRIVATE)
-        val st_phone = sharedPreferences.getString("Phone", "") ?: ""
+        val st_phone = sharedPreferences.getString("Account", "") ?: ""
 
         databaseReference.child("miners").child(st_phone)
             .addListenerForSingleValueEvent(object : ValueEventListener {
                 override fun onDataChange(snapshot: DataSnapshot) {
                     val str_uname = snapshot.child("User_Name").value as String?
                     name?.setText(str_uname)
-                    val str_phone = snapshot.child("Phone").value as String?
-                    phone?.setText("Phone: " + str_phone)
+                    val str_phone = snapshot.child("Account").value as String?
+                    phone?.setText("Account No.: " + str_phone)
                     val str_balance = snapshot.child("Balance").value as String?
                     balance?.setText("Balance: " + str_balance.toString())
                 }
@@ -113,7 +113,7 @@ class AccountActivity : AppCompatActivity() {
     }
     fun samePage(view: View) {
         val sharedPreferences = this.getSharedPreferences("MySharedPref", Context.MODE_PRIVATE)
-        val st_phone = sharedPreferences.getString("Phone", "") ?: ""
+        val st_phone = sharedPreferences.getString("Account", "") ?: ""
 
         val st_uname: String = name?.getText().toString()
 

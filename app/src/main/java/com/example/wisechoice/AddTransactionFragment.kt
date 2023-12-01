@@ -73,7 +73,6 @@ class AddTransactionFragment : Fragment(), NavigationView.OnNavigationItemSelect
         nView = navigationView?.getHeaderView(0)
         username = nView?.findViewById<TextView>(R.id.username)
         phone = nView?.findViewById<TextView>(R.id.phone)
-        photo = nView?.findViewById<ImageView>(R.id.photo)
         home_menu = view.findViewById<ImageView>(R.id.home_menu)
 
         home_menu?.setOnClickListener {
@@ -83,7 +82,7 @@ class AddTransactionFragment : Fragment(), NavigationView.OnNavigationItemSelect
         navigationView?.setNavigationItemSelectedListener(this)
 
         val sharedPreferences = requireContext().getSharedPreferences("MySharedPref", Context.MODE_PRIVATE)
-        val st_phone = sharedPreferences.getString("Phone", "") ?: ""
+        val st_phone = sharedPreferences.getString("Account", "") ?: ""
 
         phone?.text = st_phone
         FirebaseDatabase.getInstance().getReference("miners").child(st_phone)
@@ -118,7 +117,7 @@ class AddTransactionFragment : Fragment(), NavigationView.OnNavigationItemSelect
 
     private fun fetchSignatureFromFirebase() {
         val sharedPreferences = requireContext().getSharedPreferences("MySharedPref", Context.MODE_PRIVATE)
-        val st_phone = sharedPreferences.getString("Phone", "") ?: ""
+        val st_phone = sharedPreferences.getString("Account", "") ?: ""
 
         databaseReference.child("miners").child(st_phone)
             .addListenerForSingleValueEvent(object : ValueEventListener {
@@ -152,7 +151,7 @@ class AddTransactionFragment : Fragment(), NavigationView.OnNavigationItemSelect
     @RequiresApi(Build.VERSION_CODES.O)
     private fun performTransaction(signature :String) {
         val sharedPreferences = requireContext().getSharedPreferences("MySharedPref", Context.MODE_PRIVATE)
-        val st_phone = sharedPreferences.getString("Phone", "") ?: ""
+        val st_phone = sharedPreferences.getString("Account", "") ?: ""
 
         val st_receiver = receiverField.text.toString()
         val st_amount = amountField.text.toString().toDoubleOrNull() ?: 0.0
@@ -293,7 +292,7 @@ class AddTransactionFragment : Fragment(), NavigationView.OnNavigationItemSelect
     private fun updateSenderBalance(newBalance: Double, amount: Double, fees: Double, receiver: String, signature: String,
                                     formattedDateTime: String) {
         val sharedPreferences = requireContext().getSharedPreferences("MySharedPref", Context.MODE_PRIVATE)
-        val st_phone = sharedPreferences.getString("Phone", "") ?: ""
+        val st_phone = sharedPreferences.getString("Account", "") ?: ""
 
         val senderRef = databaseReference.child("miners")
 

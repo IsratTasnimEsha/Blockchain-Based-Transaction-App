@@ -44,7 +44,7 @@ class NotificationAdapter(
 
     override fun onBindViewHolder(holder: MyViewHolder, position: Int) {
         val sharedPreferences = context.getSharedPreferences("MySharedPref", Context.MODE_PRIVATE)
-        val st_phone = sharedPreferences.getString("Phone", "") ?: ""
+        val st_phone = sharedPreferences.getString("Account", "") ?: ""
 
         if("${messages[position]}" == st_phone && "${activities[position]}" == "BlockDetailsActivity") {
             holder.message.text = "Your Block is Now in the Queue, " +
@@ -92,7 +92,7 @@ class NotificationAdapter(
 
         holder.notification_card.setOnClickListener {
             val sharedPreferences = context.getSharedPreferences("MySharedPref", Context.MODE_PRIVATE)
-            val st_phone = sharedPreferences.getString("Phone", "") ?: ""
+            val st_phone = sharedPreferences.getString("Account", "") ?: ""
 
             FirebaseDatabase.getInstance().getReference("miners").child(st_phone).child("notifications")
                 .child(idValue).child("Status").setValue("Read")
@@ -140,7 +140,7 @@ class NotificationActivity : AppCompatActivity() {
         setContentView(R.layout.activity_notification)
 
         val sharedPreferences = this.getSharedPreferences("MySharedPref", Context.MODE_PRIVATE)
-        val st_phone = sharedPreferences.getString("Phone", "") ?: ""
+        val st_phone = sharedPreferences.getString("Account", "") ?: ""
 
         databaseReference = FirebaseDatabase.getInstance().getReference("miners").child(st_phone)
             .child("notifications")

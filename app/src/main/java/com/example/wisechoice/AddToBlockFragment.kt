@@ -182,7 +182,7 @@ class TempBlockAdapter(
         holder.verify_button.setOnClickListener {
             val sharedPreferences =
                 context.getSharedPreferences("MySharedPref", Context.MODE_PRIVATE)
-            val st_phone = sharedPreferences.getString("Phone", "") ?: ""
+            val st_phone = sharedPreferences.getString("Account", "") ?: ""
 
             if(holder.verify.text == "Unrecognized") {
 
@@ -267,7 +267,7 @@ class TempBlockAdapter(
 
     private fun checkBlockchain(path: String) {
         val sharedPreferences = context.getSharedPreferences("MySharedPref", Context.MODE_PRIVATE)
-        val st_phone = sharedPreferences.getString("Phone", "") ?: ""
+        val st_phone = sharedPreferences.getString("Account", "") ?: ""
 
         FirebaseDatabase.getInstance()
             .getReference("miners")
@@ -392,7 +392,6 @@ class AddToBlockFragment : Fragment(), NavigationView.OnNavigationItemSelectedLi
         nView = navigationView?.getHeaderView(0)
         username = nView?.findViewById<TextView>(R.id.username)
         phone = nView?.findViewById<TextView>(R.id.phone)
-        photo = nView?.findViewById<ImageView>(R.id.photo)
         home_menu = view.findViewById<ImageView>(R.id.home_menu)
 
         home_menu?.setOnClickListener {
@@ -403,7 +402,7 @@ class AddToBlockFragment : Fragment(), NavigationView.OnNavigationItemSelectedLi
 
         var sharedPreferences =
             requireContext().getSharedPreferences("MySharedPref", Context.MODE_PRIVATE)
-        var st_phone = sharedPreferences.getString("Phone", "") ?: ""
+        var st_phone = sharedPreferences.getString("Account", "") ?: ""
 
         phone?.text = st_phone
         FirebaseDatabase.getInstance().getReference("miners").child(st_phone)
@@ -498,7 +497,7 @@ class AddToBlockFragment : Fragment(), NavigationView.OnNavigationItemSelectedLi
 
     fun statusSelected(status1: String, status2: String, status3: String, status4: String, status5: String, status6: String) {
         val sharedPreferences = requireContext().getSharedPreferences("MySharedPref", Context.MODE_PRIVATE)
-        val st_phone = sharedPreferences.getString("Phone", "") ?: ""
+        val st_phone = sharedPreferences.getString("Account", "") ?: ""
 
         databaseReference.addValueEventListener(object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {

@@ -48,8 +48,8 @@ class MineBlockAdapter(
     }
 
     override fun onBindViewHolder(holder: MyViewHolder, position: Int) {
-        holder.sender.text = "${senders[position]}"
-        holder.receiver.text = "${receivers[position]}"
+        holder.sender.text = "${hashText(senders[position])}.."
+        holder.receiver.text = "${hashText(receivers[position])}.."
         holder.amount.text = "${amounts[position]}"
         holder.fees.text = "${feeses[position]}"
         val idValue = ids[position]
@@ -57,7 +57,7 @@ class MineBlockAdapter(
         holder.remove_button.setOnClickListener {
             val sharedPreferences =
                 context.getSharedPreferences("MySharedPref", Context.MODE_PRIVATE)
-            val st_phone = sharedPreferences.getString("Phone", "") ?: ""
+            val st_phone = sharedPreferences.getString("Account", "") ?: ""
 
             val newTransactionRef = FirebaseDatabase.getInstance().getReference("miners")
                 .child(st_phone).child("transactions").child(idValue)
@@ -77,6 +77,22 @@ class MineBlockAdapter(
 
     override fun getItemCount(): Int {
         return senders.size
+    }
+
+    private fun hashText(text: String): String {
+        val digest = MessageDigest.getInstance("SHA-256")
+        val hashedBytes = digest.digest(text.toByteArray())
+        return bytesToHex(hashedBytes).substring(0, 3)
+    }
+
+    private fun bytesToHex(bytes: ByteArray): String {
+        val hexChars = CharArray(bytes.size * 2)
+        for (i in bytes.indices) {
+            val v = bytes[i].toInt() and 0xFF
+            hexChars[i * 2] = "0123456789ABCDEF"[v ushr 4]
+            hexChars[i * 2 + 1] = "0123456789ABCDEF"[v and 0x0F]
+        }
+        return String(hexChars)
     }
 
     class MyViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
@@ -110,7 +126,6 @@ class MineFragment : Fragment(), NavigationView.OnNavigationItemSelectedListener
 
     var username: TextView? = null
     var phone: TextView? = null
-    var photo: ImageView? = null
     var home_menu: ImageView? = null
 
     override fun onCreateView(
@@ -136,7 +151,6 @@ class MineFragment : Fragment(), NavigationView.OnNavigationItemSelectedListener
         nView = navigationView?.getHeaderView(0)
         username = nView?.findViewById<TextView>(R.id.username)
         phone = nView?.findViewById<TextView>(R.id.phone)
-        photo = nView?.findViewById<ImageView>(R.id.photo)
         home_menu = view.findViewById<ImageView>(R.id.home_menu)
 
         home_menu?.setOnClickListener {
@@ -146,6 +160,22 @@ class MineFragment : Fragment(), NavigationView.OnNavigationItemSelectedListener
         navigationView?.setNavigationItemSelectedListener(this)
 
         val sharedPreferences = requireContext().getSharedPreferences("MySharedPref", Context.MODE_PRIVATE)
+        val st_phone = sharedPreferences.getString("Account", "") ?: ""
+
+        phone?.text = st_phone
+        FirebaseDatabase.getInstance().getReference("miners").child(st_phone)
+            .addListenerForSingleValueEvent(object : ValueEventListener {
+                override fun onDataChange(snapshot: DataSnapshot) {
+                    val userName = snapshot.child("User_Name").getValue().toString()
+
+                    username?.text = userName
+                }
+
+                override fun onCancelled(error: DatabaseError) {
+
+                }
+            })
+
 
         recyclerView = view.findViewById(R.id.recycler)
         recyclerView.setHasFixedSize(true)
@@ -163,19 +193,11 @@ class MineFragment : Fragment(), NavigationView.OnNavigationItemSelectedListener
         recyclerView.adapter = adapterClass
 
         mineButton = view.findViewById(R.id.mine_button)
-        cancelButton = view.findViewById(R.id.cancel_button)
-
-        mineButton.setOnClickListener {
-            val st_phone = sharedPreferences.getString("Phone", "") ?: ""
-
-            FirebaseDatabase.getInstance().getReference("miners")
-                .child(st_phone).child("temporary_blocks").removeValue()
-        }
 
         hashText = view.findViewById(R.id.hash_text)
 
         mineButton.setOnClickListener {
-            val st_phone = sharedPreferences.getString("Phone", "") ?: ""
+            val st_phone = sharedPreferences.getString("Account", "") ?: ""
 
             val tempBlockchainRef = FirebaseDatabase.getInstance().getReference("miners")
                 .child(st_phone).child("temporary_blocks")
@@ -221,8 +243,6 @@ class MineFragment : Fragment(), NavigationView.OnNavigationItemSelectedListener
         checkBlockchain("main_blockchain")
         checkBlockchain("blockchain")
 
-        val st_phone = sharedPreferences.getString("Phone", "") ?: ""
-
         val tempBlocksReference = FirebaseDatabase.getInstance().getReference("miners")
             .child(st_phone).child("temporary_blocks")
 
@@ -266,7 +286,7 @@ class MineFragment : Fragment(), NavigationView.OnNavigationItemSelectedListener
     private fun performMining() {
         val sharedPreferences = requireContext().getSharedPreferences("MySharedPref", Context.MODE_PRIVATE)
 
-        val st_phone = sharedPreferences.getString("Phone", "") ?: ""
+        val st_phone = sharedPreferences.getString("Account", "") ?: ""
 
         val concatenatedTransactions = StringBuilder()
 
@@ -376,7 +396,7 @@ class MineFragment : Fragment(), NavigationView.OnNavigationItemSelectedListener
 
         val sharedPreferences = requireContext().getSharedPreferences("MySharedPref", Context.MODE_PRIVATE)
 
-        val st_phone = sharedPreferences.getString("Phone", "") ?: ""
+        val st_phone = sharedPreferences.getString("Account", "") ?: ""
 
         val blockVal = FirebaseDatabase.getInstance().getReference("miners")
             .child(st_phone).child("block_queue").push()
@@ -790,7 +810,7 @@ class MineFragment : Fragment(), NavigationView.OnNavigationItemSelectedListener
     private fun checkBlock() {
         val sharedPreferences =
             requireContext().getSharedPreferences("MySharedPref", Context.MODE_PRIVATE)
-        val st_phone = sharedPreferences.getString("Phone", "") ?: ""
+        val st_phone = sharedPreferences.getString("Account", "") ?: ""
 
         val minersRef = FirebaseDatabase.getInstance().getReference("miners")
 
@@ -870,7 +890,7 @@ class MineFragment : Fragment(), NavigationView.OnNavigationItemSelectedListener
 
     private fun checkBlockchain(path: String) {
         val sharedPreferences = requireContext().getSharedPreferences("MySharedPref", Context.MODE_PRIVATE)
-        val st_phone = sharedPreferences.getString("Phone", "") ?: ""
+        val st_phone = sharedPreferences.getString("Account", "") ?: ""
 
         FirebaseDatabase.getInstance()
             .getReference("miners")

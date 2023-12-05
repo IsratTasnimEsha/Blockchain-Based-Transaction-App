@@ -7,7 +7,6 @@ Welcome to the Blockchain Transaction System project! This project implements a 
 - [Features](#features)
 - [System Architecture](#system-architecture)
 - [Activities](#activities)
-- [Getting Started](#getting-started)
 - [Usage](#usage)
 - [Validation](#validation)
 - [Account Management](#account-management)
@@ -46,6 +45,14 @@ The system follows a decentralized architecture, with users participating in tra
 - **Notification:** Receive updates and notifications on blockchain activities.
 - **Account:** Manage user account information, change details, and reset passwords.
 - **Forgot Password:** Recover forgotten passwords securely.
+
+![1](https://github.com/IsratTasnimEsha/Blockchain-Based-Transaction-App/assets/88322977/0a977ef0-5c6d-4e0c-8fbf-eab9136b96ea)
+
+![2](https://github.com/IsratTasnimEsha/Blockchain-Based-Transaction-App/assets/88322977/8414a708-d63b-41c4-984a-83201c333419)
+
+![3](https://github.com/IsratTasnimEsha/Blockchain-Based-Transaction-App/assets/88322977/4d28ff36-bad8-4d4e-8c0f-a3f6df85a1f8)
+
+![4](https://github.com/IsratTasnimEsha/Blockchain-Based-Transaction-App/assets/88322977/a9ad05e1-1b6a-4ede-ab2e-7cc188013ab2)
 
 ## Usage
 The system is designed to be user-friendly. Follow the prompts and interfaces for each activity to perform transactions, mine blocks, and manage your account securely.

@@ -15,6 +15,7 @@ Welcome to the Blockchain Transaction System project! This project implements a 
 - [Database Integrity](#database-integrity)
 - [Contributing](#contributing)
 - [License](#license)
+- [Authors](#authors)
 
 ## Introduction
 This project implements a custom blockchain-based transaction system. Users can sign up, perform secure transactions, and participate in the mining process to add new blocks to the blockchain. The system ensures data integrity and security through digital signatures and SHA-256 hash generation.
@@ -79,3 +80,11 @@ Contributions are welcome! Feel free to submit issues, feature requests, or pull
 This project is licensed under the MIT License.
 
 Feel free to customize this README file further based on your project's specific details and requirements.
+
+## Authors
+
+- Israt Tasnim Esha
+- Hasibul Hasan Hasib
+
+*Department of Computer Science and Engineering*  
+*Khulna University of Engineering and Technology*

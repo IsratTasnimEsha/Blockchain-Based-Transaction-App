@@ -1,15 +1,12 @@
-# Blockchain Transaction System
+# WiseChoice - A Blockchain Based Transaction System
 
 <br>
-
 
 <p align="center">
   <img src="https://github.com/IsratTasnimEsha/Blockchain-Based-Transaction-App/assets/88322977/84fbc5e4-958a-4a0e-bd45-53143f068516" alt="Logo" width="12%">
 </p>
 
-
-
-Welcome to the Blockchain Transaction System project! This project implements a custom transaction and blockchain system, ensuring secure and transparent financial transactions. Users can sign up, perform transactions, mine blocks, and manage their accounts in a decentralized environment.
+Welcome to the **WiseChoice**: A Blockchain Based Transaction System project! This project implements a custom transaction and blockchain system, ensuring secure and transparent financial transactions. Users can sign up, perform transactions, mine blocks, and manage their accounts in a decentralized environment.
 
 ## Table of Contents
 - [Introduction](#introduction)

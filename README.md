@@ -7,7 +7,7 @@
 
 
 <p align="center">
-![C](https://github.com/IsratTasnimEsha/Blockchain-Based-Transaction-App/assets/88322977/1fc4cc1a-5426-428e-a15e-3cb31e655ea6)
+https://github.com/IsratTasnimEsha/Blockchain-Based-Transaction-App/assets/88322977/1fc4cc1a-5426-428e-a15e-3cb31e655ea6
 </p>
 
 

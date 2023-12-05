@@ -884,19 +884,16 @@ class MineFragment : Fragment(), NavigationView.OnNavigationItemSelectedListener
                                         hashString("$previousNonce$previousMiner$finalTransactionInfo$total_amount$total_fees")
 
                                     if (hashed == previousHash) {
-                                        removeNulls()
                                         performMining()
-                                        removeNulls()
-
+                                        return
                                     } else {
-                                        removeNulls()
-
-                                        Toast.makeText(
+                                       Toast.makeText(
                                             context,
                                             "Corrupted Block Can't Be Added To Blockchain. " +
-                                                    "Try With Another Block From Your Block Queue",
+                                                    "Try With Another Block From Your Block Queue.",
                                             Toast.LENGTH_SHORT
                                         ).show()
+                                        return
                                     }
                                 }
 
@@ -993,50 +990,34 @@ class MineFragment : Fragment(), NavigationView.OnNavigationItemSelectedListener
     override fun onNavigationItemSelected(item: MenuItem): Boolean {
         when (item.itemId) {
             R.id.block_queue -> {
-                removeNulls()
-
                 val intent = Intent(requireContext(), BlockQueueActivity::class.java)
                 startActivity(intent)
             }
             R.id.blockchain -> {
-                removeNulls()
-
                 val intent = Intent(requireContext(), BlockchainActivity::class.java)
                 startActivity(intent)
             }
             R.id.transaction -> {
-                removeNulls()
-
                 val intent = Intent(requireContext(), MinerTransactionActivity::class.java)
                 startActivity(intent)
             }
             R.id.inbox -> {
-                removeNulls()
-
                 val intent = Intent(requireContext(), InboxActivity::class.java)
                 startActivity(intent)
             }
             R.id.rejected -> {
-                removeNulls()
-
                 val intent = Intent(requireContext(), RejectedBlocksActivity::class.java)
                 startActivity(intent)
             }
             R.id.notifications -> {
-                removeNulls()
-
                 val intent = Intent(requireContext(), NotificationActivity::class.java)
                 startActivity(intent)
             }
             R.id.account -> {
-                removeNulls()
-
                 val intent = Intent(requireContext(), AccountActivity::class.java)
                 startActivity(intent)
             }
             R.id.logout -> {
-                removeNulls()
-
                 val sharedPrefs = context?.getSharedPreferences(SignInActivity.PREFS_NAME, Context.MODE_PRIVATE)
                 val editor = sharedPrefs?.edit()
                 editor?.putBoolean("hasSignedIn", false)

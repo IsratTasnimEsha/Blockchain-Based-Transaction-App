@@ -21,6 +21,7 @@ Welcome to the **WiseChoice**: A Blockchain Based Transaction System project! Th
 - [Database Integrity](#database-integrity)
 - [Contributing](#contributing)
 - [License](#license)
+- [Supervisor](#supervisor)
 - [Authors](#authors)
 
 ## Introduction
@@ -86,6 +87,13 @@ Contributions are welcome! Feel free to submit issues, feature requests, or pull
 This project is licensed under the MIT License.
 
 Feel free to customize this README file further based on your project's specific details and requirements.
+
+## Supervisor
+
+- Md. Ahsan Habib, Lecturer
+
+*Department of Computer Science and Engineering*  
+*Khulna University of Engineering and Technology*
 
 ## Authors
 

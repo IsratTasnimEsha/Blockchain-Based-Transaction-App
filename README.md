@@ -69,7 +69,7 @@ Contributions are welcome! Feel free to submit issues, feature requests, or pull
 
 ## Contact
 
-I'm here to assist you on your journey with the WiseChoice - A Blockchain Based Transaction System. If you need help or want to share feedback, feel free to reach out to us at [israttasnimesha1046@gmail.com](mailto:israttasnimesha1046@gmail.com).
+I'm here to assist you on your journey with the WiseChoice - A Blockchain Based Transaction System. If you need help or want to share feedback, feel free to reach out to me at [israttasnimesha1046@gmail.com](mailto:israttasnimesha1046@gmail.com).
 
 ## Supervisor
 

@@ -83,11 +83,6 @@ The system regularly validates the database by checking four random user account
 ## Contributing
 Contributions are welcome! Feel free to submit issues, feature requests, or pull requests. Please adhere to the project's coding standards and guidelines.
 
-## License
-This project is licensed under the MIT License.
-
-Feel free to customize this README file further based on your project's specific details and requirements.
-
 ## Supervisor
 
 - Md. Ahsan Habib, Lecturer

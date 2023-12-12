@@ -8,22 +8,6 @@
 
 Welcome to the **WiseChoice**: A Blockchain Based Transaction System project! This project implements a custom transaction and blockchain system, ensuring secure and transparent financial transactions. Users can sign up, perform transactions, mine blocks, and manage their accounts in a decentralized environment.
 
-## Table of Contents
-- [Introduction](#introduction)
-- [Features](#features)
-- [System Architecture](#system-architecture)
-- [Activities](#activities)
-- [Usage](#usage)
-- [Validation](#validation)
-- [Account Management](#account-management)
-- [Security](#security)
-- [Notification System](#notification-system)
-- [Database Integrity](#database-integrity)
-- [Contributing](#contributing)
-- [License](#license)
-- [Supervisor](#supervisor)
-- [Authors](#authors)
-
 ## Introduction
 This project implements a custom blockchain-based transaction system. Users can sign up, perform secure transactions, and participate in the mining process to add new blocks to the blockchain. The system ensures data integrity and security through digital signatures and SHA-256 hash generation.
 
@@ -82,6 +66,10 @@ The system regularly validates the database by checking four random user account
 
 ## Contributing
 Contributions are welcome! Feel free to submit issues, feature requests, or pull requests. Please adhere to the project's coding standards and guidelines.
+
+## Contact
+
+I'm here to assist you on your journey with the WiseChoice - A Blockchain Based Transaction System. If you need help or want to share feedback, feel free to reach out to us at [israttasnimesha1046@gmail.com](mailto:israttasnimesha1046@gmail.com).
 
 ## Supervisor
 

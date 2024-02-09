@@ -39,7 +39,7 @@ class AddTransactionFragment : Fragment(), NavigationView.OnNavigationItemSelect
     private lateinit var receiverField: EditText
     private lateinit var amountField: EditText
     private lateinit var feesField: EditText
-
+    private lateinit var timeText: TextView
 
     private lateinit var signatureButton: Button
     private lateinit var st_phone: String
@@ -102,7 +102,7 @@ class AddTransactionFragment : Fragment(), NavigationView.OnNavigationItemSelect
         receiverField = view.findViewById(R.id.receiver)
         amountField = view.findViewById(R.id.amount)
         feesField = view.findViewById(R.id.fees)
-
+        timeText = view.findViewById(R.id.time_text)
 
         signatureButton = view.findViewById(R.id.signatureButton)
 
@@ -158,6 +158,8 @@ class AddTransactionFragment : Fragment(), NavigationView.OnNavigationItemSelect
         val st_amount = amountField.text.toString().toDoubleOrNull() ?: 0.0
         val st_fees = feesField.text.toString().toDoubleOrNull() ?: 0.0
         val st_signature = signature
+
+        val startTime = System.currentTimeMillis()
 
         if (st_receiver.isEmpty() || st_amount == 0.0 || st_fees == 0.0 || st_signature.isEmpty()) {
             Toast.makeText(requireContext(), "Please fill in all fields.", Toast.LENGTH_SHORT).show()
@@ -262,6 +264,11 @@ class AddTransactionFragment : Fragment(), NavigationView.OnNavigationItemSelect
                                 val newBalance = st_amount + st_fees
 
                                 updateSenderBalance(newBalance, st_amount, st_fees, st_receiver, st_signature,formattedDateTime)
+
+                                val endTime = System.currentTimeMillis()
+                                val timeRequiredForMining = endTime - startTime
+
+                                timeText.text = "Time Required: $timeRequiredForMining ms"
                             }
                         }
 

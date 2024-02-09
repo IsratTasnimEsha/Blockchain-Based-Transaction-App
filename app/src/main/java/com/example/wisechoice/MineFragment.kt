@@ -120,6 +120,7 @@ class MineFragment : Fragment(), NavigationView.OnNavigationItemSelectedListener
     private lateinit var adapterClass: MineBlockAdapter
     private lateinit var mineButton: Button
     private lateinit var hashText: TextView
+    private lateinit var timeText: TextView
 
     private val senders = mutableListOf<String>()
     private val receivers = mutableListOf<String>()
@@ -204,6 +205,7 @@ class MineFragment : Fragment(), NavigationView.OnNavigationItemSelectedListener
         mineButton = view.findViewById(R.id.mine_button)
 
         hashText = view.findViewById(R.id.hash_text)
+        timeText = view.findViewById(R.id.time_text)
 
         mineButton.setOnClickListener {
             val st_phone = sharedPreferences.getString("Account", "") ?: ""
@@ -327,6 +329,8 @@ class MineFragment : Fragment(), NavigationView.OnNavigationItemSelectedListener
             var randomNotch: Int
 
             Thread {
+                val startTime = System.currentTimeMillis()
+
                 do {
                     randomNotch = (10000..99999).random()
                     val stringWithNotch = "$randomNotch$st_phone$concatenatedString$total_amount$total_fees"
@@ -340,6 +344,11 @@ class MineFragment : Fragment(), NavigationView.OnNavigationItemSelectedListener
                     Thread.sleep(10)
 
                 } while (!hashedString.startsWith("00"))
+
+                val endTime = System.currentTimeMillis()
+                val timeRequiredForMining = endTime - startTime
+
+                timeText.text = "Time Required: $timeRequiredForMining ms"
 
 
                 if(concatenatedString.toString().length != 0) {

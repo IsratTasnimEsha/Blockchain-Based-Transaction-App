@@ -62,9 +62,9 @@ class BlockDetailsAdapter(
     private fun verifySignature(publicKey: String, signature: String, data: String): Boolean {
         try {
 
-            Log.d("SignatureVerification", "Public Key: $publicKey")
-            Log.d("SignatureVerification", "Signature: $signature")
-            Log.d("SignatureVerification", "Data: $data")
+            //Log.d("SignatureVerification", "Public Key: $publicKey")
+            //Log.d("SignatureVerification", "Signature: $signature")
+            //Log.d("SignatureVerification", "Data: $data")
 
             val publicBytes = Base64.getDecoder().decode(publicKey)
             val keySpec = X509EncodedKeySpec(publicBytes)
@@ -214,6 +214,7 @@ class BlockDetailsActivity : AppCompatActivity() {
     private lateinit var totalFeesTextView: TextView
     private lateinit var minedTextView: TextView
     private lateinit var acceptButton: Button
+    private lateinit var timeText: TextView
 
     private lateinit var databaseReference: DatabaseReference
 
@@ -244,6 +245,7 @@ class BlockDetailsActivity : AppCompatActivity() {
         totalFeesTextView = findViewById(R.id.total_fees)
         minedTextView = findViewById(R.id.mined)
         acceptButton = findViewById(R.id.accept_button)
+        timeText = findViewById(R.id.time_text)
 
         st_id = intent.getStringExtra("block_id") ?: ""
 
@@ -375,6 +377,8 @@ class BlockDetailsActivity : AppCompatActivity() {
     }
 
     private fun acceptBlock() {
+        val startTime = System.currentTimeMillis()
+
         val sharedPreferences = this.getSharedPreferences("MySharedPref", Context.MODE_PRIVATE)
         val st_phone = sharedPreferences.getString("Account", "") ?: ""
 
@@ -438,6 +442,11 @@ class BlockDetailsActivity : AppCompatActivity() {
                             ).show()
                         }
                     }
+
+                    val endTime = System.currentTimeMillis()
+                    val timeRequiredForMining = endTime - startTime
+
+                    timeText.text = "$timeRequiredForMining ms"
                 }
 
                 override fun onCancelled(error: DatabaseError) {

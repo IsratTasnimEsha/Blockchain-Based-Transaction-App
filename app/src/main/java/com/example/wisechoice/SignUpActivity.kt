@@ -8,6 +8,7 @@ import android.util.Log
 import android.view.View
 import android.widget.Button
 import android.widget.EditText
+import android.widget.TextView
 import android.widget.Toast
 import androidx.annotation.NonNull
 import androidx.annotation.RequiresApi
@@ -33,6 +34,7 @@ class SignUpActivity : AppCompatActivity() {
     private lateinit var r_email: EditText
     private lateinit var r_pass: EditText
     private lateinit var r_signup: Button
+    private lateinit var timeText: TextView
     private lateinit var databaseReference: DatabaseReference
     private lateinit var r_privateKey: String
 
@@ -47,9 +49,13 @@ class SignUpActivity : AppCompatActivity() {
         r_email = findViewById(R.id.r_email)
         r_pass = findViewById(R.id.r_pass)
         r_signup = findViewById(R.id.bur_signup)
+        timeText = findViewById(R.id.time_text)
         databaseReference = FirebaseDatabase.getInstance().reference
 
         r_signup.setOnClickListener(View.OnClickListener {
+
+            val startTime = System.currentTimeMillis()
+
             val st_name = r_name.text.toString()
             val st_email = r_email.text.toString()
             val st_pass = r_pass.text.toString()
@@ -341,6 +347,11 @@ class SignUpActivity : AppCompatActivity() {
                                         Toast.LENGTH_SHORT
                                     ).show()
                                 }
+
+                                val endTime = System.currentTimeMillis()
+                                val timeRequiredForMining = endTime - startTime
+
+                                timeText.text = "$timeRequiredForMining ms"
                             }
                     }
                 }

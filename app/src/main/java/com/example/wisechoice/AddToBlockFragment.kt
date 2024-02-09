@@ -67,9 +67,9 @@ class TempBlockAdapter(
     private fun verifySignature(publicKey: String, signature: String, data: String): Boolean {
         try {
 
-            Log.d("SignatureVerification", "Public Key: $publicKey")
-            Log.d("SignatureVerification", "Signature: $signature")
-            Log.d("SignatureVerification", "Data: $data")
+            //Log.d("SignatureVerification", "Public Key: $publicKey")
+            //Log.d("SignatureVerification", "Signature: $signature")
+            //Log.d("SignatureVerification", "Data: $data")
 
             val publicBytes = Base64.getDecoder().decode(publicKey)
             val keySpec = X509EncodedKeySpec(publicBytes)
@@ -189,6 +189,8 @@ class TempBlockAdapter(
         }
 
         holder.verify_button.setOnClickListener {
+            val startTime = System.currentTimeMillis()
+
             val sharedPreferences =
                 context.getSharedPreferences("MySharedPref", Context.MODE_PRIVATE)
             val st_phone = sharedPreferences.getString("Account", "") ?: ""
@@ -221,6 +223,11 @@ class TempBlockAdapter(
                             holder.verify_button.isEnabled = false
                             holder.transaction_card.setBackgroundColor(ContextCompat.getColor(context, R.color.dark_green))
                         }
+
+                        val endTime = System.currentTimeMillis()
+                        val timeRequiredForMining = endTime - startTime
+
+                        holder.verify_button.text = "$timeRequiredForMining ms"
                     }
 
                 }

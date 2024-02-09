@@ -1,21 +1,12 @@
-# Blockchain Transaction System
+# WiseChoice - A Blockchain Based Transaction System
 
-Welcome to the Blockchain Transaction System project! This project implements a custom transaction and blockchain system, ensuring secure and transparent financial transactions. Users can sign up, perform transactions, mine blocks, and manage their accounts in a decentralized environment.
+<br>
 
-## Table of Contents
-- [Introduction](#introduction)
-- [Features](#features)
-- [System Architecture](#system-architecture)
-- [Activities](#activities)
-- [Usage](#usage)
-- [Validation](#validation)
-- [Account Management](#account-management)
-- [Security](#security)
-- [Notification System](#notification-system)
-- [Database Integrity](#database-integrity)
-- [Contributing](#contributing)
-- [License](#license)
-- [Authors](#authors)
+<p align="center">
+  <img src="https://github.com/IsratTasnimEsha/Blockchain-Based-Transaction-App/assets/88322977/84fbc5e4-958a-4a0e-bd45-53143f068516" alt="Logo" width="12%">
+</p>
+
+Welcome to the **WiseChoice**: A Blockchain Based Transaction System project! This project implements a custom transaction and blockchain system, ensuring secure and transparent financial transactions. Users can sign up, perform transactions, mine blocks, and manage their accounts in a decentralized environment.
 
 ## Introduction
 This project implements a custom blockchain-based transaction system. Users can sign up, perform secure transactions, and participate in the mining process to add new blocks to the blockchain. The system ensures data integrity and security through digital signatures and SHA-256 hash generation.
@@ -76,10 +67,16 @@ The system regularly validates the database by checking four random user account
 ## Contributing
 Contributions are welcome! Feel free to submit issues, feature requests, or pull requests. Please adhere to the project's coding standards and guidelines.
 
-## License
-This project is licensed under the MIT License.
+## Contact
 
-Feel free to customize this README file further based on your project's specific details and requirements.
+I'm here to assist you on your journey with the WiseChoice - A Blockchain Based Transaction System. If you need help or want to share feedback, feel free to reach out to me at [israttasnimesha1046@gmail.com](mailto:israttasnimesha1046@gmail.com).
+
+## Supervisor
+
+- Md. Ahsan Habib, Lecturer
+
+*Department of Computer Science and Engineering*  
+*Khulna University of Engineering and Technology*
 
 ## Authors
 

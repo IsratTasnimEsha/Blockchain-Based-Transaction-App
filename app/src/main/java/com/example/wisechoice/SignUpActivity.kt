@@ -143,20 +143,44 @@ class SignUpActivity : AppCompatActivity() {
                                                     val random2 = phoneNumbers.random()
                                                     val random3 = phoneNumbers.random()
                                                     val random4 = phoneNumbers.random()
+                                                    val random5 = phoneNumbers.random()
 
                                                     val balance1 = snapshot.child(random1)
                                                         .child("Users_Balance")
                                                     val balance2 = snapshot.child(random2)
                                                         .child("Users_Balance")
-                                                    val blockchain1 = snapshot.child(random3)
+                                                    val balance3 = snapshot.child(random3)
+                                                        .child("Users_Balance")
+                                                    val balance4 = snapshot.child(random4)
+                                                        .child("Users_Balance")
+                                                    val balance5 = snapshot.child(random5)
+                                                        .child("Users_Balance")
+
+                                                    val blockchain1 = snapshot.child(random1)
                                                         .child("main_blockchain")
-                                                    val blockchain2 = snapshot.child(random4)
+                                                    val blockchain2 = snapshot.child(random2)
+                                                        .child("main_blockchain")
+                                                    val blockchain3 = snapshot.child(random3)
+                                                        .child("main_blockchain")
+                                                    val blockchain4 = snapshot.child(random3)
+                                                        .child("main_blockchain")
+                                                    val blockchain5 = snapshot.child(random5)
                                                         .child("main_blockchain")
 
-                                                    if (balance1.exists() && balance2.exists() && balance1.value == balance2.value) {
+                                                    if (balance1.exists() && balance2.exists() && balance3.exists() &&
+                                                        balance4.exists() && balance5.exists() &&
+                                                        balance1.value == balance2.value &&
+                                                        balance2.value == balance3.value &&
+                                                        balance3.value == balance4.value &&
+                                                        balance4.value == balance5.value) {
 
                                                         if (blockchain1.exists() && blockchain2.exists() &&
-                                                            blockchain1.value != blockchain2.value
+                                                            blockchain3.exists() && blockchain4.exists() &&
+                                                            blockchain5.exists() &&
+                                                            !(blockchain1.value == blockchain2.value &&
+                                                                    blockchain2.value == blockchain3.value &&
+                                                                    blockchain3.value == blockchain4.value &&
+                                                                    blockchain4.value == blockchain5.value)
                                                         ) {
                                                             Toast.makeText(
                                                                 this@SignUpActivity,
@@ -322,8 +346,8 @@ class SignUpActivity : AppCompatActivity() {
                                                                 this@SignUpActivity,
                                                                 SignInActivity::class.java
                                                             )
-                                                            startActivity(intent)
-                                                            finish()
+                                                            //startActivity(intent)
+                                                            //finish()
                                                         }
                                                     } else {
                                                         Toast.makeText(

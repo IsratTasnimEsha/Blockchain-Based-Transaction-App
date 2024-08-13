@@ -75,9 +75,6 @@ I'm here to assist you on your journey with the WiseChoice - A Blockchain Based 
 
 - **Md. Ahsan Habib, Lecturer**
 
-*Department of Computer Science and Engineering*  
-*Khulna University of Engineering and Technology*
-
 ## Authors
 
 - **Israt Tasnim Esha** (1907090)

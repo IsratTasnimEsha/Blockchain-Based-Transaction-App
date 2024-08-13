@@ -73,15 +73,16 @@ I'm here to assist you on your journey with the WiseChoice - A Blockchain Based 
 
 ## Supervisor
 
-- Md. Ahsan Habib, Lecturer
+- **Md. Ahsan Habib, Lecturer**
 
 *Department of Computer Science and Engineering*  
 *Khulna University of Engineering and Technology*
 
 ## Authors
 
-- Israt Tasnim Esha
-- Hasibul Hasan Hasib
+- **Israt Tasnim Esha** (1907090)
+- **Hasibul Hasan Hasib** (1907089)
 
+**CSE 3200 - System Development Project**  
 *Department of Computer Science and Engineering*  
 *Khulna University of Engineering and Technology*
